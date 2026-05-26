@@ -4,6 +4,7 @@ class AlumnoController extends Controller {
     private AlumnoModel $alumnoModel;
     private ProgramaModel $programaModel;
     private AsignacionModel $asignacionModel;
+    private DocumentoModel $documentoModel;
     private ?array $alumno = null;
 
     public function __construct() {
@@ -21,6 +22,7 @@ class AlumnoController extends Controller {
         $this->alumnoModel = new AlumnoModel();
         $this->programaModel = new ProgramaModel();
         $this->asignacionModel = new AsignacionModel();
+        $this->documentoModel = new DocumentoModel();
 
         // Obtener datos del alumno logueado
         $this->alumno = $this->alumnoModel->obtenerPorUsuarioId($_SESSION['id_usuario']);
@@ -52,6 +54,12 @@ class AlumnoController extends Controller {
             ? round(($horasCompletadas / $totalHorasMeta) * 100) 
             : 0;
 
+        // Estado de documentos iniciales
+        $estadoDocumentos = [];
+        if ($alumno) {
+            $estadoDocumentos = $this->documentoModel->obtenerEstadoDocumentosIniciales($alumno['id_alumno']);
+        }
+
         $this->view('alumno/dashboard', [
             'titulo' => 'Mi Progreso',
             'alumno' => $alumno,
@@ -59,6 +67,7 @@ class AlumnoController extends Controller {
             'horasCompletadas' => $horasCompletadas,
             'totalHorasMeta' => $totalHorasMeta,
             'porcentajeHoras' => $porcentajeHoras,
+            'estadoDocumentos' => $estadoDocumentos,
             'paginaActiva' => 'dashboard'
         ]);
     }
@@ -191,32 +200,134 @@ class AlumnoController extends Controller {
     }
 
     /**
-     * Mi Expediente — Vista estática (maqueta para siguiente fase)
+     * Mi Expediente — Vista de documentos
      * Endpoint: GET /alumno/expediente
      */
     public function expediente(): void {
+        if (!$this->alumno) {
+            $this->redirect('auth/login');
+            return;
+        }
+
+        $documentos = $this->documentoModel->obtenerPorAlumno($this->alumno['id_alumno']);
+        $estadoDocumentos = $this->documentoModel->obtenerEstadoDocumentosIniciales($this->alumno['id_alumno']);
+
+        // Calcular porcentaje de expediente inicial
+        $docsAprobados = 0;
+        $totalDocsRequeridos = count($estadoDocumentos);
+        foreach ($estadoDocumentos as $estado) {
+            if ($estado === 'Aprobado') {
+                $docsAprobados++;
+            }
+        }
+        $progresoExpediente = $totalDocsRequeridos > 0 ? round(($docsAprobados / $totalDocsRequeridos) * 100) : 0;
+
         $this->view('alumno/expediente', [
             'titulo' => 'Mi Expediente y Seguimiento',
             'alumno' => $this->alumno,
+            'documentos' => $documentos,
+            'estadoDocumentos' => $estadoDocumentos,
+            'progresoExpediente' => $progresoExpediente,
             'paginaActiva' => 'expediente'
         ]);
     }
 
     /**
-     * Endpoint para peticiones AJAX de subida de reportes (placeholder)
-     * Endpoint: POST /alumno/subir_reporte
+     * Endpoint para subida de documentos
+     * Endpoint: POST /alumno/subir_documento
      */
-    public function subir_reporte(): void {
+    public function subir_documento(): void {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->jsonResponse(['error' => 'Método HTTP no permitido.'], 405);
+            $this->redirect('alumno/expediente');
             return;
         }
 
-        // Lógica de subida a implementar en fase posterior
-        $this->jsonResponse([
-            'status' => 'success',
-            'message' => 'Reporte subido correctamente.',
-            'fecha_recepcion' => date('Y-m-d H:i:s')
-        ]);
+        if (!$this->alumno) {
+            die("No se encontró perfil de alumno.");
+        }
+
+        $tipoDocumento = $_POST['tipo_documento'] ?? '';
+        
+        if (empty($tipoDocumento) || !isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+            $_SESSION['flash_error'] = 'Debe seleccionar un tipo de documento y un archivo válido.';
+            $this->redirect('alumno/expediente');
+            return;
+        }
+
+        $archivo = $_FILES['archivo'];
+        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+
+        if ($extension !== 'pdf') {
+            $_SESSION['flash_error'] = 'Solo se permiten archivos PDF.';
+            $this->redirect('alumno/expediente');
+            return;
+        }
+
+        if ($archivo['size'] > 10 * 1024 * 1024) { // 10MB
+            $_SESSION['flash_error'] = 'El archivo supera el tamaño máximo de 10MB.';
+            $this->redirect('alumno/expediente');
+            return;
+        }
+
+        // Crear directorio si no existe
+        $uploadDir = APP_PATH . '/uploads/documentos/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        // Generar nombre seguro
+        $safeName = time() . '_' . rand(1000, 9999) . '_' . preg_replace('/[^a-zA-Z0-9.-]/', '_', $archivo['name']);
+        $rutaDestino = $uploadDir . $safeName;
+        $rutaRelativa = '/uploads/documentos/' . $safeName;
+
+        if (move_uploaded_file($archivo['tmp_name'], $rutaDestino)) {
+            // Guardar en BD
+            $this->documentoModel->subirDocumento(
+                $this->alumno['id_alumno'],
+                $tipoDocumento,
+                $archivo['name'],
+                $rutaRelativa
+            );
+            $_SESSION['flash_success'] = 'Documento subido correctamente.';
+        } else {
+            $_SESSION['flash_error'] = 'Ocurrió un error al guardar el archivo en el servidor.';
+        }
+
+        $this->redirect('alumno/expediente');
+    }
+
+    /**
+     * Endpoint para eliminar documento (solo si es Nuevo o Rechazado)
+     * Endpoint: POST /alumno/eliminar_documento
+     */
+    public function eliminar_documento(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !$this->alumno) {
+            $this->redirect('alumno/expediente');
+            return;
+        }
+
+        $idDocumento = (int) ($_POST['id_documento'] ?? 0);
+        if ($idDocumento > 0) {
+            // Verificar si el documento existe y obtener la ruta antes de eliminarlo
+            $doc = $this->documentoModel->obtenerPorId($idDocumento, $this->alumno['id_alumno']);
+            
+            if ($doc && in_array($doc['estado_validacion'], ['Nuevo', 'Rechazado'])) {
+                // Eliminar de la base de datos
+                if ($this->documentoModel->eliminarDocumento($idDocumento, $this->alumno['id_alumno'])) {
+                    // Eliminar del servidor físico
+                    $rutaFisica = APP_PATH . $doc['ruta_servidor'];
+                    if (file_exists($rutaFisica)) {
+                        unlink($rutaFisica);
+                    }
+                    $_SESSION['flash_success'] = 'Documento eliminado exitosamente.';
+                } else {
+                    $_SESSION['flash_error'] = 'No se pudo eliminar el documento de la base de datos.';
+                }
+            } else {
+                $_SESSION['flash_error'] = 'El documento no existe o no puede ser eliminado en su estado actual.';
+            }
+        }
+
+        $this->redirect('alumno/expediente');
     }
 }

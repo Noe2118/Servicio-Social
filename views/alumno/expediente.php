@@ -112,6 +112,13 @@
     </li>
 </ul>
 
+<?php if (isset($_SESSION['flash_success'])): ?>
+    <div class="alert alert-success mt-3"><?= $_SESSION['flash_success']; unset($_SESSION['flash_success']); ?></div>
+<?php endif; ?>
+<?php if (isset($_SESSION['flash_error'])): ?>
+    <div class="alert alert-danger mt-3"><?= $_SESSION['flash_error']; unset($_SESSION['flash_error']); ?></div>
+<?php endif; ?>
+
 <div class="tab-content">
     <!-- ===== Tab: Documentos Iniciales ===== -->
     <div class="tab-pane fade show active" id="tabDocIniciales" role="tabpanel">
@@ -120,18 +127,33 @@
             <div class="col-lg-8">
                 <!-- Upload Zone -->
                 <div class="card-custom p-4 mb-4">
-                    <div class="upload-zone" id="uploadZone">
-                        <div class="upload-icon">
-                            <i class="bi bi-cloud-arrow-up"></i>
+                    <form action="<?= BASE_URL ?>/alumno/subir_documento" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Tipo de Documento</label>
+                            <select name="tipo_documento" class="form-select" required>
+                                <option value="">Selecciona el documento que vas a subir...</option>
+                                <option value="Carta de Aceptación">Carta de Aceptación</option>
+                                <option value="Plan de Trabajo Inicial">Plan de Trabajo Inicial</option>
+                                <option value="Constancia de Créditos">Constancia de Créditos</option>
+                            </select>
                         </div>
-                        <h6 class="fw-bold text-dark">Arrastra y suelta tus archivos aquí</h6>
-                        <p class="text-muted mb-3" style="font-size: 0.88rem;">
-                            Formatos soportados: PDF. Tamaño máximo: 10MB. Asegúrate de que el documento sea legible antes de subirlo.
-                        </p>
-                        <button class="btn btn-dark px-4">
-                            <i class="bi bi-upload me-1"></i> Seleccionar Archivo
-                        </button>
-                    </div>
+                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                            <div class="upload-icon">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark">Arrastra y suelta tus archivos aquí o haz clic para seleccionar</h6>
+                            <p class="text-muted mb-3" style="font-size: 0.88rem;">
+                                Formatos soportados: PDF. Tamaño máximo: 10MB.
+                            </p>
+                            <input type="file" name="archivo" id="fileInput" accept=".pdf" style="display: none;" required onchange="document.getElementById('submitBtn').style.display='block'; document.getElementById('fileName').textContent = this.files[0] ? this.files[0].name : '';">
+                            <div id="fileName" class="text-primary fw-semibold mt-2"></div>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-dark px-4" id="submitBtn" style="display: none;">
+                                <i class="bi bi-upload me-1"></i> Subir Archivo
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- Archivos Subidos -->
@@ -152,48 +174,49 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Fila 1 -->
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="doc-icon"><i class="bi bi-file-earmark-pdf"></i></div>
-                                            <span class="fw-medium">Carta de Aceptación.pdf</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">12 Oct 2023,<br>10:30 AM</td>
-                                    <td><span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">● Aprobado</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-light"><i class="bi bi-download"></i></button>
-                                    </td>
-                                </tr>
-                                <!-- Fila 2 -->
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="doc-icon"><i class="bi bi-file-earmark-pdf"></i></div>
-                                            <span class="fw-medium">Plan de Trabajo Inicial.pdf</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">15 Oct 2023,<br>02:15 PM</td>
-                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1">● En Revisión</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-light"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <!-- Fila 3 -->
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="doc-icon"><i class="bi bi-file-earmark-pdf"></i></div>
-                                            <span class="fw-medium">Constancia de Créditos.pdf</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">08 Oct 2023,<br>09:00 AM</td>
-                                    <td><span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">● Aprobado</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-light"><i class="bi bi-download"></i></button>
-                                    </td>
-                                </tr>
+                                <?php if (empty($documentos)): ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">No has subido ningún documento aún.</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($documentos as $doc): ?>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-semibold text-dark"><?= htmlspecialchars($doc['tipo_documento']) ?></span>
+                                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                                        <div class="doc-icon"><i class="bi bi-file-earmark-pdf"></i></div>
+                                                        <span class="text-muted" style="font-size: 0.85rem;"><?= htmlspecialchars($doc['nombre_archivo_original']) ?></span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-muted"><?= date('d M Y, h:i A', strtotime($doc['fecha_subida'])) ?></td>
+                                            <td>
+                                                <?php
+                                                    $bgClass = 'bg-secondary text-secondary border-secondary';
+                                                    if ($doc['estado_validacion'] === 'Aprobado') $bgClass = 'bg-success text-success border-success';
+                                                    elseif ($doc['estado_validacion'] === 'Rechazado') $bgClass = 'bg-danger text-danger border-danger';
+                                                    elseif ($doc['estado_validacion'] === 'Nuevo') $bgClass = 'bg-primary text-primary border-primary';
+                                                    elseif ($doc['estado_validacion'] === 'En Revisión') $bgClass = 'bg-warning text-dark border-warning';
+                                                ?>
+                                                <span class="badge bg-opacity-10 border px-2 py-1 <?= $bgClass ?>">
+                                                    ● <?= htmlspecialchars($doc['estado_validacion']) ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-2">
+                                                    <a href="<?= BASE_URL ?><?= htmlspecialchars($doc['ruta_servidor']) ?>" target="_blank" class="btn btn-sm btn-light" title="Ver/Descargar"><i class="bi bi-download"></i></a>
+                                                    <?php if (in_array($doc['estado_validacion'], ['Nuevo', 'Rechazado'])): ?>
+                                                        <form action="<?= BASE_URL ?>/alumno/eliminar_documento" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar este documento?');">
+                                                            <input type="hidden" name="id_documento" value="<?= $doc['id_documento'] ?>">
+                                                            <button type="submit" class="btn btn-sm btn-light text-danger" title="Eliminar"><i class="bi bi-trash"></i></button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -209,34 +232,41 @@
                         <span class="text-muted fw-semibold" style="font-size: 0.78rem; letter-spacing: 0.5px;">
                             DOCUMENTOS INICIALES
                         </span>
-                        <span class="fw-bold" style="color: var(--itch-success);">66%</span>
+                        <span class="fw-bold" style="color: var(--itch-success);"><?= $progresoExpediente ?>%</span>
                     </div>
                     <div class="progress mb-4" style="height: 8px; border-radius: 4px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: 66%;" aria-valuenow="66" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress-bar bg-success" role="progressbar" style="width: <?= $progresoExpediente ?>%;" aria-valuenow="<?= $progresoExpediente ?>" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
 
                     <!-- Document Status Items -->
-                    <div class="doc-status-item">
-                        <div class="status-icon status-icon-success"><i class="bi bi-check"></i></div>
-                        <div>
-                            <div class="fw-semibold" style="font-size: 0.9rem;">Carta de Aceptación</div>
-                            <div class="text-muted" style="font-size: 0.8rem;">Revisado y aprobado</div>
-                        </div>
-                    </div>
-                    <div class="doc-status-item">
-                        <div class="status-icon status-icon-warning"><i class="bi bi-clock"></i></div>
-                        <div>
-                            <div class="fw-semibold" style="font-size: 0.9rem;">Plan de Trabajo</div>
-                            <div class="text-muted" style="font-size: 0.8rem;">En proceso de revisión</div>
-                        </div>
-                    </div>
-                    <div class="doc-status-item">
-                        <div class="status-icon status-icon-danger"><i class="bi bi-exclamation"></i></div>
-                        <div>
-                            <div class="fw-semibold" style="font-size: 0.9rem;">Constancia de Plática</div>
-                            <div style="font-size: 0.8rem; color: #dc2626;">Falta subir documento</div>
-                        </div>
-                    </div>
+                    <?php if (isset($estadoDocumentos)): ?>
+                        <?php foreach ($estadoDocumentos as $docName => $status): ?>
+                            <?php
+                                $statusIconClass = 'status-icon-danger';
+                                $icon = 'bi-exclamation';
+                                $statusText = 'Falta subir documento';
+                                
+                                if ($status === 'Aprobado') {
+                                    $statusIconClass = 'status-icon-success';
+                                    $icon = 'bi-check';
+                                    $statusText = 'Revisado y aprobado';
+                                } elseif (in_array($status, ['Nuevo', 'En Revisión'])) {
+                                    $statusIconClass = 'status-icon-warning';
+                                    $icon = 'bi-clock';
+                                    $statusText = 'En proceso de revisión';
+                                } elseif ($status === 'Rechazado') {
+                                    $statusText = 'Rechazado. Por favor, vuelve a subirlo.';
+                                }
+                            ?>
+                            <div class="doc-status-item">
+                                <div class="status-icon <?= $statusIconClass ?>"><i class="bi <?= $icon ?>"></i></div>
+                                <div>
+                                    <div class="fw-semibold" style="font-size: 0.9rem;"><?= htmlspecialchars($docName) ?></div>
+                                    <div style="font-size: 0.8rem; <?= $status === 'Rechazado' || $status === 'Falta Subir' ? 'color: #dc2626;' : 'color: #6b7280;' ?>"><?= $statusText ?></div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Help Card -->
@@ -247,7 +277,7 @@
                     <p class="text-muted mb-2" style="font-size: 0.88rem;">
                         Consulta la guía de formatos y requisitos para asegurar que tus documentos sean aceptados en la primera revisión.
                     </p>
-                    <a href="#" class="text-decoration-none fw-semibold" style="font-size: 0.9rem;">
+                    <a href="https://chetumal.tecnm.mx/notas/index.php/articulos/458-formatos-de-inscripcion-y-de-reportes" target="_blank" class="text-decoration-none fw-semibold" style="font-size: 0.9rem;">
                         Ver guía de documentos <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>

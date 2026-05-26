@@ -187,38 +187,50 @@
     </div>
 </div>
 
-<!-- ===== Sección: Tareas Pendientes (Maqueta Estática) ===== -->
+<!-- ===== Sección: Tareas Pendientes ===== -->
 <div class="card-custom p-4 mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="fw-bold text-dark mb-0">
             <i class="bi bi-clipboard-check me-1"></i> Tareas Pendientes
         </h6>
-        <a href="#" class="text-decoration-none" style="font-size: 0.9rem;">Ver todas</a>
+        <a href="<?= BASE_URL ?>/alumno/expediente" class="text-decoration-none" style="font-size: 0.9rem;">Ir a Expediente</a>
     </div>
 
-    <!-- Tarea 1: Reporte Bimestral -->
-    <div class="task-item">
-        <div class="task-icon task-icon-warning">
-            <i class="bi bi-exclamation-triangle"></i>
-        </div>
-        <div class="flex-grow-1">
-            <div class="fw-semibold text-dark">Reporte Bimestral 2</div>
-            <div class="text-muted" style="font-size: 0.85rem;">Vence pronto (en 2 días)</div>
-        </div>
-        <button class="btn btn-dark btn-sm px-3">Subir Reporte</button>
-    </div>
+    <?php 
+        $hasTasks = false;
+        if (isset($estadoDocumentos)) {
+            foreach ($estadoDocumentos as $docName => $status) {
+                if ($status !== 'Aprobado') {
+                    $hasTasks = true;
+                    $isMissing = ($status === 'Falta Subir' || $status === 'Rechazado');
+                    $iconClass = $isMissing ? 'task-icon-warning text-danger' : 'task-icon-info text-primary';
+                    $iconName = $isMissing ? 'bi-exclamation-triangle' : 'bi-hourglass-split';
+                    $statusText = $isMissing ? 'Pendiente de subir' : 'En revisión por DGTyV';
+                    ?>
+                    <div class="task-item">
+                        <div class="task-icon <?= $iconClass ?>" style="background: <?= $isMissing ? '#fee2e2' : '#e0e7ff' ?>;">
+                            <i class="bi <?= $iconName ?>"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold text-dark"><?= $isMissing ? 'Subir: ' : '' ?><?= htmlspecialchars($docName) ?></div>
+                            <div class="text-muted" style="font-size: 0.85rem;">Estado: <?= $statusText ?></div>
+                        </div>
+                        <a href="<?= BASE_URL ?>/alumno/expediente" class="btn <?= $isMissing ? 'btn-dark' : 'btn-outline-dark' ?> btn-sm px-3">
+                            <?= $isMissing ? 'Subir Archivo' : 'Ver Detalle' ?>
+                        </a>
+                    </div>
+                    <?php
+                }
+            }
+        }
+    ?>
 
-    <!-- Tarea 2: Evaluación -->
-    <div class="task-item">
-        <div class="task-icon task-icon-info">
-            <i class="bi bi-file-earmark-text"></i>
+    <?php if (!$hasTasks): ?>
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-check-circle fs-2 text-success d-block mb-2"></i>
+            ¡Todo al día! No tienes tareas pendientes.
         </div>
-        <div class="flex-grow-1">
-            <div class="fw-semibold text-dark">Evaluación de Desempeño Parcial</div>
-            <div class="text-muted" style="font-size: 0.85rem;">Disponible a partir del 15 de Noviembre</div>
-        </div>
-        <button class="btn btn-outline-dark btn-sm px-3">Ver Detalles</button>
-    </div>
+    <?php endif; ?>
 </div>
 
 <!-- ===== JavaScript: Animación del Gráfico Circular ===== -->
