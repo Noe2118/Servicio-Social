@@ -11,6 +11,7 @@ class SetupController extends Controller {
         echo "<h1>Controlador Técnico</h1>";
         echo "<p>Utiliza la ruta <a href='" . BASE_URL . "/setup/seed_programas'>/setup/seed_programas</a> para inyectar la data de prueba.</p>";
         echo "<p>Utiliza la ruta <a href='" . BASE_URL . "/setup/seed_alumno'>/setup/seed_alumno</a> para crear un alumno de prueba.</p>";
+        echo "<p>Utiliza la ruta <a href='" . BASE_URL . "/setup/seed_fase4'>/setup/seed_fase4</a> para inyectar la data de prueba de Fase 4.</p>";
     }
 
     public function seed_programas() {
@@ -326,5 +327,54 @@ class SetupController extends Controller {
         
         echo '<h2>Datos de prueba para admin insertados correctamente.</h2>';
         echo '<p><a href="' . BASE_URL . '/auth/login">Ir al Login</a> (admin@itch.edu.mx / admin123)</p>';
+    }
+
+    public function seed_fase4() {
+        try {
+            $this->db->beginTransaction();
+
+            $correoDIF = 'contacto@difmunicipal.gob.mx';
+            $stmtCheck = $this->db->prepare("SELECT id_usuario FROM usuarios WHERE correo = ?");
+            $stmtCheck->execute([$correoDIF]);
+            if ($stmtCheck->rowCount() == 0) {
+                $stmtUser = $this->db->prepare("INSERT INTO usuarios (correo, password_hash, rol) VALUES (?, ?, 'Dependencia')");
+                $stmtUser->execute([$correoDIF, password_hash('dif123', PASSWORD_DEFAULT)]);
+                $idUserDIF = $this->db->lastInsertId();
+
+                $stmtDep = $this->db->prepare("INSERT INTO dependencias (id_usuario, nombre_organizacion, direccion) VALUES (?, ?, ?)");
+                $stmtDep->execute([$idUserDIF, 'DIF Municipal', 'Calle 5 Sur, Centro']);
+                $idDependencia = $this->db->lastInsertId();
+            } else {
+                $idUserDIF = $stmtCheck->fetchColumn();
+                $stmtDep = $this->db->prepare("SELECT id_dependencia FROM dependencias WHERE id_usuario = ?");
+                $stmtDep->execute([$idUserDIF]);
+                $idDependencia = $stmtDep->fetchColumn();
+            }
+
+            $stmtProg = $this->db->prepare("INSERT INTO programas (id_dependencia, folio_programa, nombre_programa, modalidad, cupos_totales, cupos_ocupados, estado_aprobacion) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmtProg->execute([$idDependencia, 'DIF-001', 'Desarrollo Web Frontend', 'Presencial', 5, 2, 'Aprobado']);
+            $idProg1 = $this->db->lastInsertId();
+            $stmtProg->execute([$idDependencia, 'DIF-002', 'Prácticas de Ingeniería Civil', 'Híbrida', 10, 10, 'Aprobado']);
+            $stmtProg->execute([$idDependencia, 'DIF-003', 'Análisis de Datos Económicos', 'Virtual', 3, 0, 'En Revisión por DGTyV']);
+
+            // Crear alumno de prueba asignado
+            $stmtUserAl = $this->db->prepare("INSERT INTO usuarios (correo, password_hash, rol) VALUES (?, ?, 'Alumno')");
+            $stmtUserAl->execute(['agarcia@itch.edu.mx', password_hash('alumno123', PASSWORD_DEFAULT)]);
+            $idUserAl1 = $this->db->lastInsertId();
+
+            $stmtAl = $this->db->prepare("INSERT INTO alumnos (id_usuario, no_control, nombre_completo, carrera) VALUES (?, ?, ?, ?)");
+            $stmtAl->execute([$idUserAl1, '19120155', 'García López, Ana', 'Ingeniería en Sistemas Computacionales']);
+            $idAl1 = $this->db->lastInsertId();
+
+            $stmtAsig = $this->db->prepare("INSERT INTO asignaciones (id_alumno, id_programa, estado_asignacion) VALUES (?, ?, 'Activo')");
+            $stmtAsig->execute([$idAl1, $idProg1]);
+
+            $this->db->commit();
+            echo "✅ Seeder Fase 4 ejecutado correctamente.";
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            echo "❌ Error: " . $e->getMessage();
+        }
     }
 }
