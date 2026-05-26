@@ -39,7 +39,7 @@
                         </div>
                     <?php endif; ?>
 
-                    <form action="/auth/login" method="POST">
+                    <form action="<?= BASE_URL ?>/auth/login" method="POST">
                         <div class="form-floating mb-3">
                             <input type="email" class="form-control" id="correo" name="correo" placeholder="correo@itch.edu.mx" required>
                             <label for="correo">Correo Electrónico</label>

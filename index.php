@@ -6,6 +6,9 @@ ini_set('display_errors', 1);
 // Definir constante de la raíz de la aplicación
 define('APP_PATH', __DIR__);
 
+// Definir la URL base del proyecto (subcarpeta en htdocs)
+define('BASE_URL', '/SistemaServicioSocial');
+
 // Autoloader simple para cargar clases automáticamente
 spl_autoload_register(function ($class) {
     $paths = ['core', 'controllers', 'models'];

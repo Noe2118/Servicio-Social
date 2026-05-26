@@ -13,7 +13,7 @@ class Controller {
         if (file_exists($viewPath)) {
             // Extraer las variables para que estén disponibles en el scope de la vista
             extract($data);
-            require_once $viewPath;
+            require $viewPath;
         } else {
             die("Error crítico: La vista '{$viewName}' no existe en '{$viewPath}'.");
         }
@@ -36,7 +36,8 @@ class Controller {
      * @param string $url Ruta relativa (ej. 'alumno/dashboard')
      */
     protected function redirect($url) {
-        header('Location: /' . $url);
+        $base = defined('BASE_URL') ? BASE_URL : '';
+        header('Location: ' . $base . '/' . $url);
         exit;
     }
 }
