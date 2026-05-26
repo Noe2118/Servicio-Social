@@ -217,4 +217,114 @@ class SetupController extends Controller {
             echo "<p>" . htmlspecialchars($e->getMessage()) . "</p>";
         }
     }
+
+    public function seed_admin(): void {
+        $db = Database::getInstance()->getConnection();
+        
+        // Create DGTyV admin user if not exists
+        $stmt = $db->prepare("SELECT COUNT(*) FROM usuarios WHERE correo = 'admin@itch.edu.mx'");
+        $stmt->execute();
+        if ((int)$stmt->fetchColumn() === 0) {
+            $db->prepare(
+                "INSERT INTO usuarios (correo, password_hash, rol) VALUES ('admin@itch.edu.mx', :pass, 'DGTyV')"
+            )->execute(['pass' => password_hash('admin123', PASSWORD_DEFAULT)]);
+        }
+        
+        // Create test dependencias if none exist
+        $stmt = $db->query("SELECT COUNT(*) FROM dependencias");
+        if ((int)$stmt->fetchColumn() === 0) {
+            // First create dependency users
+            $depUsers = [
+                ['correo' => 'gobierno@test.mx', 'pass' => password_hash('test123', PASSWORD_DEFAULT)],
+                ['correo' => 'inegi@test.mx', 'pass' => password_hash('test123', PASSWORD_DEFAULT)],
+                ['correo' => 'manosalaobra@test.mx', 'pass' => password_hash('test123', PASSWORD_DEFAULT)],
+            ];
+            $depUserIds = [];
+            foreach ($depUsers as $u) {
+                $db->prepare("INSERT INTO usuarios (correo, password_hash, rol) VALUES (:correo, :pass, 'Dependencia')")->execute(['correo' => $u['correo'], 'pass' => $u['pass']]);
+                $depUserIds[] = $db->lastInsertId();
+            }
+            
+            $deps = [
+                ['id_usuario' => $depUserIds[0], 'nombre' => 'Gobierno del Estado', 'direccion' => 'Av. Héroes #123, Chetumal, Q.Roo'],
+                ['id_usuario' => $depUserIds[1], 'nombre' => 'INEGI', 'direccion' => 'Blvd. Bahía #456, Chetumal, Q.Roo'],
+                ['id_usuario' => $depUserIds[2], 'nombre' => 'Asociación Civil "Manos a la Obra"', 'direccion' => 'Calle 22 #789, Chetumal, Q.Roo'],
+            ];
+            foreach ($deps as $d) {
+                $db->prepare(
+                    "INSERT INTO dependencias (id_usuario, nombre_organizacion, direccion) VALUES (:id_usuario, :nombre, :dir)"
+                )->execute(['id_usuario' => $d['id_usuario'], 'nombre' => $d['nombre'], 'dir' => $d['direccion']]);
+            }
+        }
+        
+        // Create test programas in 'En Revisión por DGTyV' state
+        $stmt = $db->query("SELECT COUNT(*) FROM programas WHERE estado_aprobacion = 'En Revisión por DGTyV'");
+        if ((int)$stmt->fetchColumn() === 0) {
+            $depIds = $db->query("SELECT id_dependencia FROM dependencias ORDER BY id_dependencia")->fetchAll(PDO::FETCH_COLUMN);
+            if (count($depIds) >= 3) {
+                $programas = [
+                    [
+                        'id_dep' => $depIds[0],
+                        'folio' => 'PRG-2023-089',
+                        'nombre' => 'Desarrollo Tecnológico Rural',
+                        'modalidad' => 'Presencial',
+                        'descripcion' => 'El programa busca integrar estudiantes de las carreras de Ingeniería en Sistemas e Informática para el desarrollo de una plataforma web que permita a productores rurales registrar y gestionar sus inventarios agrícolas.',
+                        'perfiles' => 'Ingeniería en Sistemas Computacionales (3 cupos), Ingeniería Informática (2 cupos), Conocimientos básicos en bases de datos SQL y frameworks web.',
+                        'cupos' => 5,
+                        'horario' => 'Lunes a Viernes 8:00 - 14:00',
+                        'ubicacion' => 'Oficinas Gobierno del Estado, Chetumal',
+                        'responsable' => 'Arq. Roberto Almeida',
+                        'contacto' => 'ralmeida@gobestado.mx | Ext. 4021',
+                        'fecha' => '2023-10-12'
+                    ],
+                    [
+                        'id_dep' => $depIds[1],
+                        'folio' => 'PRG-2023-090',
+                        'nombre' => 'Actualización Cartográfica Local',
+                        'modalidad' => 'Híbrida',
+                        'descripcion' => 'Apoyo en la actualización de la cartografía digital del municipio de Othón P. Blanco mediante el uso de herramientas GIS.',
+                        'perfiles' => 'Ingeniería Civil (5 cupos), Ingeniería en Sistemas (3 cupos), Arquitectura (4 cupos).',
+                        'cupos' => 12,
+                        'horario' => 'Lunes a Viernes 9:00 - 15:00',
+                        'ubicacion' => 'INEGI Delegación Chetumal',
+                        'responsable' => 'Ing. María López',
+                        'contacto' => 'mlopez@inegi.org.mx | Ext. 301',
+                        'fecha' => '2023-10-10'
+                    ],
+                    [
+                        'id_dep' => $depIds[2],
+                        'folio' => 'PRG-2023-091',
+                        'nombre' => 'Apoyo Educativo Comunitario',
+                        'modalidad' => 'Presencial',
+                        'descripcion' => 'Programa de tutorías y apoyo educativo para niños y jóvenes de comunidades vulnerables en la zona sur de Quintana Roo.',
+                        'perfiles' => 'Todas las carreras. Se requiere disposición para trabajo comunitario.',
+                        'cupos' => 3,
+                        'horario' => 'Sábados 9:00 - 13:00',
+                        'ubicacion' => 'Comunidades rurales, Othón P. Blanco',
+                        'responsable' => 'Lic. Fernando Castro',
+                        'contacto' => 'fcastro@manosalaobra.org | Tel. 983-111-2233',
+                        'fecha' => '2023-10-08'
+                    ],
+                ];
+                
+                foreach ($programas as $p) {
+                    $db->prepare(
+                        "INSERT INTO programas (id_dependencia, folio_programa, nombre_programa, modalidad, descripcion, perfiles_requeridos, cupos_totales, cupos_ocupados, horario, ubicacion, responsable_nombre, responsable_contacto, estado_aprobacion, fecha_envio) 
+                         VALUES (:id_dep, :folio, :nombre, :modalidad, :desc, :perfiles, :cupos, 0, :horario, :ubicacion, :resp, :contacto, 'En Revisión por DGTyV', :fecha)"
+                    )->execute([
+                        'id_dep' => $p['id_dep'], 'folio' => $p['folio'], 'nombre' => $p['nombre'],
+                        'modalidad' => $p['modalidad'], 'desc' => $p['descripcion'], 'perfiles' => $p['perfiles'],
+                        'cupos' => $p['cupos'], 'horario' => $p['horario'], 'ubicacion' => $p['ubicacion'],
+                        'resp' => $p['responsable'], 'contacto' => $p['contacto'], 'fecha' => $p['fecha']
+                    ]);
+                }
+            }
+        }
+        
+        // Update existing test alumno to have 500 hours for liberation testing
+        $db->exec("UPDATE alumnos SET horas_completadas = 500, estado_servicio = 'En curso' WHERE id_alumno = 1");
+        
+        echo '<h2>Datos de prueba para admin insertados correctamente.</h2>';
+        echo '<p><a href="' . BASE_URL . '/auth/login">Ir al Login</a> (admin@itch.edu.mx / admin123)</p>';
+    }
 }

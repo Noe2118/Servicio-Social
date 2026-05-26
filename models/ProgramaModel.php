@@ -82,4 +82,86 @@ class ProgramaModel {
         );
         return $stmt->fetchAll();
     }
+
+    public function contarPendientes(): int {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM programas WHERE estado_aprobacion = 'En Revisión por DGTyV'");
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function obtenerPendientesConDependencia(): array {
+        $stmt = $this->db->query(
+            "SELECT p.*, d.nombre_organizacion 
+             FROM programas p 
+             JOIN dependencias d ON p.id_dependencia = d.id_dependencia 
+             WHERE p.estado_aprobacion = 'En Revisión por DGTyV' 
+             ORDER BY p.fecha_envio DESC"
+        );
+        return $stmt->fetchAll();
+    }
+
+    public function obtenerProgramaPorId(int $id): ?array {
+        $stmt = $this->db->prepare(
+            "SELECT p.*, d.nombre_organizacion 
+             FROM programas p 
+             JOIN dependencias d ON p.id_dependencia = d.id_dependencia 
+             WHERE p.id_programa = :id"
+        );
+        $stmt->execute(['id' => $id]);
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
+
+    public function actualizarEstado(int $id, string $estado): bool {
+        $stmt = $this->db->prepare(
+            "UPDATE programas SET estado_aprobacion = :estado WHERE id_programa = :id"
+        );
+        $stmt->execute(['estado' => $estado, 'id' => $id]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public function obtenerTodasLasDependencias(): array {
+        $stmt = $this->db->query("SELECT id_dependencia, nombre_organizacion FROM dependencias ORDER BY nombre_organizacion ASC");
+        return $stmt->fetchAll();
+    }
+
+    public function crearPrograma(array $datos): bool {
+        $sql = "INSERT INTO programas (
+                    id_dependencia, folio_programa, nombre_programa, modalidad, 
+                    descripcion, perfiles_requeridos, cupos_totales, cupos_ocupados, 
+                    horario, ubicacion, responsable_nombre, responsable_contacto, 
+                    estado_aprobacion, fecha_envio
+                ) VALUES (
+                    :id_dependencia, :folio, :nombre, :modalidad, 
+                    :descripcion, :perfiles, :cupos, 0, 
+                    :horario, :ubicacion, :responsable_nombre, :responsable_contacto, 
+                    'Aprobado', CURRENT_DATE
+                )";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'id_dependencia' => $datos['id_dependencia'],
+            'folio' => $datos['folio_programa'],
+            'nombre' => $datos['nombre_programa'],
+            'modalidad' => $datos['modalidad'],
+            'descripcion' => $datos['descripcion'],
+            'perfiles' => $datos['perfiles_requeridos'],
+            'cupos' => $datos['cupos_totales'],
+            'horario' => $datos['horario'],
+            'ubicacion' => $datos['ubicacion'],
+            'responsable_nombre' => $datos['responsable_nombre'],
+            'responsable_contacto' => $datos['responsable_contacto']
+        ]);
+    }
+
+    public function obtenerProgramasRecientes(int $limit = 5): array {
+        $stmt = $this->db->prepare(
+            "SELECT p.id_programa, p.nombre_programa, p.estado_aprobacion, p.fecha_envio, d.nombre_organizacion 
+             FROM programas p 
+             JOIN dependencias d ON p.id_dependencia = d.id_dependencia 
+             ORDER BY p.fecha_envio DESC 
+             LIMIT :limit"
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }

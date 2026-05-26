@@ -105,4 +105,53 @@ class DocumentoModel {
 
         return $resultado;
     }
+
+    public function contarNuevos(): int {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM documentos WHERE estado_validacion = 'Nuevo'");
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function obtenerDocumentosConAlumno(): array {
+        $stmt = $this->db->query(
+            "SELECT d.*, a.nombre_completo, a.no_control 
+             FROM documentos d 
+             JOIN alumnos a ON d.id_alumno = a.id_alumno 
+             WHERE d.estado_validacion IN ('Nuevo', 'Corregido') 
+             ORDER BY d.fecha_subida DESC"
+        );
+        return $stmt->fetchAll();
+    }
+
+    public function obtenerDocumentoPorIdAdmin(int $idDocumento): ?array {
+        $stmt = $this->db->prepare(
+            "SELECT d.*, a.nombre_completo, a.no_control 
+             FROM documentos d 
+             JOIN alumnos a ON d.id_alumno = a.id_alumno 
+             WHERE d.id_documento = :id"
+        );
+        $stmt->execute(['id' => $idDocumento]);
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
+
+    public function actualizarEstadoConComentarios(int $id, string $estado, ?string $comentarios): bool {
+        $stmt = $this->db->prepare(
+            "UPDATE documentos SET estado_validacion = :estado, comentarios_dgtyv = :comentarios WHERE id_documento = :id"
+        );
+        $stmt->execute(['estado' => $estado, 'comentarios' => $comentarios, 'id' => $id]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public function obtenerDocumentosRecientes(int $limit = 5): array {
+        $stmt = $this->db->prepare(
+            "SELECT d.id_documento, d.tipo_documento, d.estado_validacion, d.fecha_subida, a.nombre_completo 
+             FROM documentos d 
+             JOIN alumnos a ON d.id_alumno = a.id_alumno 
+             ORDER BY d.fecha_subida DESC 
+             LIMIT :limit"
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }

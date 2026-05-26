@@ -215,6 +215,19 @@
                                                 </div>
                                             </td>
                                         </tr>
+                                        <?php if (!empty($doc['comentarios_dgtyv'])): ?>
+                                        <tr>
+                                            <td colspan="4" class="bg-light border-0 py-2 px-3">
+                                                <div class="d-flex gap-2 text-muted" style="font-size: 0.85rem;">
+                                                    <i class="bi bi-chat-left-text-fill text-warning mt-1"></i>
+                                                    <div>
+                                                        <strong class="text-dark">Comentario de Revisión:</strong><br>
+                                                        <?= nl2br(htmlspecialchars($doc['comentarios_dgtyv'])) ?>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <?php endif; ?>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </tbody>

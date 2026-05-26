@@ -53,7 +53,7 @@ class AuthController extends Controller {
                     
                     // Redirigir según el rol del usuario
                     if ($usuario['rol'] === 'DGTyV') {
-                        $this->redirect('admin/dashboard'); // Rutas ficticias para las siguientes fases
+                        $this->redirect('dgtyv/dashboard');
                     } elseif ($usuario['rol'] === 'Alumno') {
                         $this->redirect('alumno/dashboard');
                     } else {

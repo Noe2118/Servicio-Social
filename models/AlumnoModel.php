@@ -43,4 +43,46 @@ class AlumnoModel {
             'id_alumno' => $idAlumno
         ]);
     }
+
+    public function contarParaLiberacion(): int {
+        $stmt = $this->db->query(
+            "SELECT COUNT(*) FROM alumnos WHERE horas_completadas >= 480 AND estado_servicio = 'En curso'"
+        );
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function obtenerAlumnosParaLiberacion(): array {
+        $stmt = $this->db->query(
+            "SELECT a.*, asig.id_programa, p.nombre_programa, d.nombre_organizacion 
+             FROM alumnos a 
+             LEFT JOIN asignaciones asig ON a.id_alumno = asig.id_alumno AND asig.estado_asignacion IN ('Activo', 'Concluido')
+             LEFT JOIN programas p ON asig.id_programa = p.id_programa 
+             LEFT JOIN dependencias dep ON p.id_dependencia = dep.id_dependencia
+             LEFT JOIN dependencias d ON p.id_dependencia = d.id_dependencia
+             WHERE a.horas_completadas >= 480 AND a.estado_servicio = 'En curso'
+             ORDER BY a.nombre_completo ASC"
+        );
+        return $stmt->fetchAll();
+    }
+
+    public function marcarLiberado(int $idAlumno): bool {
+        $this->db->beginTransaction();
+        try {
+            $stmt = $this->db->prepare(
+                "UPDATE alumnos SET estado_servicio = 'Liberado' WHERE id_alumno = :id"
+            );
+            $stmt->execute(['id' => $idAlumno]);
+            
+            $stmt2 = $this->db->prepare(
+                "UPDATE asignaciones SET estado_asignacion = 'Concluido' WHERE id_alumno = :id AND estado_asignacion = 'Activo'"
+            );
+            $stmt2->execute(['id' => $idAlumno]);
+            
+            $this->db->commit();
+            return true;
+        } catch (\PDOException $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
 }
