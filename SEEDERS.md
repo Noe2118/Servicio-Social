@@ -100,6 +100,43 @@ http://localhost/SistemaServicioSocial/setup/seed_admin
 
 ---
 
+### 4. Seeder de Fase 4 — Seguimiento y Dependencias (`seed_fase4`)
+
+**URL:**
+```
+http://localhost/SistemaServicioSocial/setup/seed_fase4
+```
+
+**Propósito:** Probar el flujo completo del **Responsable de la Dependencia**: dashboard con contadores, listado de programas con barra de progreso de cupos y evaluación cualitativa de alumnos.
+
+**Qué hace:**
+- Crea el usuario y perfil de la dependencia **DIF Municipal**.
+- Inserta **3 programas** asociados (Desarrollo Web, Prácticas de Ingeniería, Análisis de Datos).
+- Crea la alumna **Ana García López** con asignación `Activo` a uno de los programas.
+
+**Credenciales generadas:**
+
+| Rol | Correo | Contraseña | Org. |
+|-----|--------|------------|------|
+| Dependencia | `contacto@difmunicipal.gob.mx` | `dif123` | DIF Municipal |
+| Alumno | `agarcia@itch.edu.mx` | `alumno123` | — |
+
+**Datos del alumno generado:**
+
+| Campo | Valor |
+|-------|-------|
+| Nombre | Ana García López |
+| No. Control | `19120155` |
+| Estado de asignación | Activo |
+
+**Flujo de prueba sugerido:**
+1. Inicia sesión con `contacto@difmunicipal.gob.mx / dif123`.
+2. Revisa el Dashboard — verifica los contadores de Alumnos Activos, Programas Aprobados y Evaluaciones Pendientes (servidos por `DependenciaModel` vía PDO).
+3. Ve a **Mis Programas** — verifica la tabla con las barras de progreso de cupos (`cupos_ocupados / cupos_totales`).
+4. Ve a **Alumnos y Evaluaciones** — selecciona a "García López, Ana", llena el formulario y envíalo. El `DependenciaController` procesará el POST y el `EvaluacionModel` insertará el registro con sentencia preparada.
+
+---
+
 ## Nota: Admin creado automáticamente
 
 El administrador (`admin@itch.edu.mx / admin123`) también **se crea automáticamente** la primera vez que cualquier usuario visita la página de login, gracias al método `verificarEInicializarAdmin()` en `AuthController`. No es estrictamente necesario ejecutar `seed_admin` solo para tener acceso al panel de administrador.
@@ -111,8 +148,9 @@ El administrador (`admin@itch.edu.mx / admin123`) también **se crea automática
 ```
 1. http://localhost/SistemaServicioSocial/setup/seed_programas
 2. http://localhost/SistemaServicioSocial/setup/seed_alumno
-3. http://localhost/SistemaServicioSocial/setup/seed_admin   (opcional, para datos extra)
-4. http://localhost/SistemaServicioSocial/auth/login          ← Iniciar sesión
+3. http://localhost/SistemaServicioSocial/setup/seed_admin    (opcional, datos admin + programas en revisión)
+4. http://localhost/SistemaServicioSocial/setup/seed_fase4    (opcional, flujo dependencia y evaluaciones)
+5. http://localhost/SistemaServicioSocial/auth/login          ← Iniciar sesión
 ```
 
 ---
@@ -127,3 +165,6 @@ El administrador (`admin@itch.edu.mx / admin123`) también **se crea automática
 | Dependencia | `gobierno@test.mx` | `test123` | *(rol externo)* |
 | Dependencia | `inegi@test.mx` | `test123` | *(rol externo)* |
 | Dependencia | `manosalaobra@test.mx` | `test123` | *(rol externo)* |
+| Dependencia (DIF) | `contacto@difmunicipal.gob.mx` | `dif123` | `/dependencia/dashboard` |
+| Alumno (Fase 4) | `agarcia@itch.edu.mx` | `alumno123` | `/alumno/dashboard` |
+
