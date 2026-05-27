@@ -345,10 +345,10 @@ class DgtyvController extends Controller {
 
         // Se usa la nueva firma (aunque sea DGTyV, por ahora pasamos vacíos o los horarios si se mandan)
         if ($this->programaModel->crearPrograma($datos)) {
-            $_SESSION['success'] = 'Programa creado y aprobado exitosamente.';
+            $_SESSION['flash_success'] = 'Programa creado y aprobado exitosamente.';
             $this->redirect('dgtyv/programas');
         } else {
-            $_SESSION['error'] = 'Error al crear el programa.';
+            $_SESSION['flash_error'] = 'Error al crear el programa.';
             $this->redirect('dgtyv/nuevo_programa');
         }
     }
