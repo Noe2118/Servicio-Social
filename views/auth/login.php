@@ -32,6 +32,19 @@
                         <p class="text-muted">Instituto Tecnológico de Chetumal</p>
                     </div>
 
+                    <?php 
+                        if (session_status() === PHP_SESSION_NONE) {
+                            session_start();
+                        }
+                    ?>
+                    <?php if (isset($_SESSION['flash_success_auth'])): ?>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <?= htmlspecialchars($_SESSION['flash_success_auth']) ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <?php unset($_SESSION['flash_success_auth']); ?>
+                    <?php endif; ?>
+
                     <?php if (!empty($error)): ?>
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <?= htmlspecialchars($error) ?>
@@ -54,7 +67,7 @@
                     </form>
                     
                     <div class="mt-4 text-center">
-                        <p class="mb-0">¿No tienes cuenta? <a href="#" class="text-decoration-none">Regístrate como alumno</a></p>
+                        <p class="mb-0">¿No tienes cuenta? <a href="<?= BASE_URL ?>/auth/registro" class="text-decoration-none">Regístrate como alumno</a></p>
                     </div>
                 </div>
             </div>

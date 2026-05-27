@@ -13,7 +13,7 @@ class AsignacionModel {
      */
     public function obtenerAsignacionActiva(int $idAlumno): ?array {
         $stmt = $this->db->prepare(
-            "SELECT a.*, p.nombre_programa, p.descripcion, p.modalidad, p.horario,
+            "SELECT a.*, p.nombre_programa, p.descripcion, p.modalidad,
                     p.ubicacion, p.responsable_nombre, p.responsable_contacto,
                     d.nombre_organizacion, d.direccion AS direccion_dependencia
              FROM asignaciones a

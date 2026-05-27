@@ -83,7 +83,7 @@ class SetupController extends Controller {
             ];
 
             // Inserción de programas verificando folios
-            $stmtProg = $this->db->prepare("INSERT INTO programas (id_dependencia, folio_programa, nombre_programa, modalidad, descripcion, perfiles_requeridos, cupos_totales, horario, ubicacion, responsable_nombre, responsable_contacto, estado_aprobacion, fecha_envio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Aprobado', CURRENT_DATE)");
+            $stmtProg = $this->db->prepare("INSERT INTO programas (id_dependencia, folio_programa, nombre_programa, modalidad, descripcion, perfiles_requeridos, cupos_totales, ubicacion, responsable_nombre, responsable_contacto, estado_aprobacion, fecha_envio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Aprobado', CURRENT_DATE)");
 
             $insertados = 0;
             foreach ($programas as $p) {
@@ -98,7 +98,6 @@ class SetupController extends Controller {
                         $p['descripcion'],
                         $p['perfiles_requeridos'],
                         $p['cupos_totales'],
-                        $p['horario'],
                         $p['ubicacion'],
                         $p['responsable_nombre'],
                         $p['responsable_contacto']
@@ -310,12 +309,12 @@ class SetupController extends Controller {
                 
                 foreach ($programas as $p) {
                     $db->prepare(
-                        "INSERT INTO programas (id_dependencia, folio_programa, nombre_programa, modalidad, descripcion, perfiles_requeridos, cupos_totales, cupos_ocupados, horario, ubicacion, responsable_nombre, responsable_contacto, estado_aprobacion, fecha_envio) 
-                         VALUES (:id_dep, :folio, :nombre, :modalidad, :desc, :perfiles, :cupos, 0, :horario, :ubicacion, :resp, :contacto, 'En Revisión por DGTyV', :fecha)"
+                        "INSERT INTO programas (id_dependencia, folio_programa, nombre_programa, modalidad, descripcion, perfiles_requeridos, cupos_totales, cupos_ocupados, ubicacion, responsable_nombre, responsable_contacto, estado_aprobacion, fecha_envio) 
+                         VALUES (:id_dep, :folio, :nombre, :modalidad, :desc, :perfiles, :cupos, 0, :ubicacion, :resp, :contacto, 'En Revisión por DGTyV', :fecha)"
                     )->execute([
                         'id_dep' => $p['id_dep'], 'folio' => $p['folio'], 'nombre' => $p['nombre'],
                         'modalidad' => $p['modalidad'], 'desc' => $p['descripcion'], 'perfiles' => $p['perfiles'],
-                        'cupos' => $p['cupos'], 'horario' => $p['horario'], 'ubicacion' => $p['ubicacion'],
+                        'cupos' => $p['cupos'], 'ubicacion' => $p['ubicacion'],
                         'resp' => $p['responsable'], 'contacto' => $p['contacto'], 'fecha' => $p['fecha']
                     ]);
                 }

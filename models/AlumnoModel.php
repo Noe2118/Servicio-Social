@@ -19,6 +19,21 @@ class AlumnoModel {
         return $result ?: null;
     }
 
+    public function crearAlumno(int $id_usuario, string $no_control, string $nombre, string $carrera, float $porcentaje): bool {
+        $stmt = $this->db->prepare(
+            'INSERT INTO alumnos (id_usuario, no_control, nombre_completo, carrera, porcentaje_creditos, periodo_actual) 
+             VALUES (:id_usuario, :no_control, :nombre, :carrera, :porcentaje, :periodo)'
+        );
+        return $stmt->execute([
+            'id_usuario' => $id_usuario,
+            'no_control' => $no_control,
+            'nombre' => $nombre,
+            'carrera' => $carrera,
+            'porcentaje' => $porcentaje,
+            'periodo' => 'Ene-Jun ' . date('Y')
+        ]);
+    }
+
     /**
      * Obtener datos del alumno por su id_alumno
      */

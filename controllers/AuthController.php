@@ -76,4 +76,62 @@ class AuthController extends Controller {
         session_destroy();
         $this->redirect('auth/login');
     }
+
+    public function registro() {
+        $this->view('auth/registro_alumno');
+    }
+
+    public function guardar_registro() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $correo = filter_input(INPUT_POST, 'correo', FILTER_SANITIZE_EMAIL);
+            $password = $_POST['password'] ?? '';
+            $no_control = $_POST['no_control'] ?? '';
+            $nombre = $_POST['nombre_completo'] ?? '';
+            $carrera = $_POST['carrera'] ?? '';
+            $porcentaje = (float)($_POST['porcentaje_creditos'] ?? 0);
+
+            if (empty($correo) || empty($password) || empty($no_control) || empty($nombre) || empty($carrera)) {
+                $this->view('auth/registro_alumno', ['error' => 'Todos los campos marcados son obligatorios.']);
+                return;
+            }
+
+            if ($this->usuarioModel->getUsuarioPorCorreo($correo)) {
+                $this->view('auth/registro_alumno', ['error' => 'El correo ya está registrado.']);
+                return;
+            }
+
+            // Validar No. Control
+            $db = Database::getInstance()->getConnection();
+            $stmt = $db->prepare('SELECT id_alumno FROM alumnos WHERE no_control = ?');
+            $stmt->execute([$no_control]);
+            if ($stmt->fetch()) {
+                $this->view('auth/registro_alumno', ['error' => 'El número de control ya está registrado.']);
+                return;
+            }
+
+            try {
+                $db->beginTransaction();
+                $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                $id_usuario = $this->usuarioModel->crearUsuario($correo, $password_hash, 'Alumno');
+
+                $alumnoModel = new AlumnoModel();
+                $alumnoModel->crearAlumno((int)$id_usuario, $no_control, $nombre, $carrera, $porcentaje);
+
+                $db->commit();
+                
+                // Redirigir al login con éxito
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                }
+                $_SESSION['flash_success_auth'] = 'Registro exitoso. Ya puedes iniciar sesión.';
+                $this->redirect('auth/login');
+                
+            } catch (Exception $e) {
+                $db->rollBack();
+                $this->view('auth/registro_alumno', ['error' => 'Hubo un error al crear la cuenta: ' . $e->getMessage()]);
+            }
+        } else {
+            $this->redirect('auth/registro');
+        }
+    }
 }
