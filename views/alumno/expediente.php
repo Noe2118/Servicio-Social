@@ -127,33 +127,46 @@
             <div class="col-lg-8">
                 <!-- Upload Zone -->
                 <div class="card-custom p-4 mb-4">
-                    <form action="<?= BASE_URL ?>/alumno/subir_documento" method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Tipo de Documento</label>
-                            <select name="tipo_documento" class="form-select" required>
-                                <option value="">Selecciona el documento que vas a subir...</option>
-                                <option value="Carta de Aceptación">Carta de Aceptación</option>
-                                <option value="Plan de Trabajo Inicial">Plan de Trabajo Inicial</option>
-                                <option value="Constancia de Créditos">Constancia de Créditos</option>
-                            </select>
+                    <?php if ($asignacion): ?>
+                        <div class="alert alert-info mb-4" style="border-radius: 10px;">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Estás subiendo documentos para el programa: <strong><?= htmlspecialchars($asignacion['nombre_programa']) ?></strong>
                         </div>
-                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-                            <div class="upload-icon">
-                                <i class="bi bi-cloud-arrow-up"></i>
+                        <form action="<?= BASE_URL ?>/alumno/subir_documento" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Tipo de Documento</label>
+                                <select name="tipo_documento" class="form-select" required>
+                                    <option value="">Selecciona el documento que vas a subir...</option>
+                                    <option value="Carta de Aceptación">Carta de Aceptación</option>
+                                    <option value="Plan de Trabajo Inicial">Plan de Trabajo Inicial</option>
+                                    <option value="Constancia de Créditos">Constancia de Créditos</option>
+                                </select>
                             </div>
-                            <h6 class="fw-bold text-dark">Arrastra y suelta tus archivos aquí o haz clic para seleccionar</h6>
-                            <p class="text-muted mb-3" style="font-size: 0.88rem;">
-                                Formatos soportados: PDF. Tamaño máximo: 10MB.
-                            </p>
-                            <input type="file" name="archivo" id="fileInput" accept=".pdf" style="display: none;" required onchange="document.getElementById('submitBtn').style.display='block'; document.getElementById('fileName').textContent = this.files[0] ? this.files[0].name : '';">
-                            <div id="fileName" class="text-primary fw-semibold mt-2"></div>
+                            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                                <div class="upload-icon">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                </div>
+                                <h6 class="fw-bold text-dark">Arrastra y suelta tus archivos aquí o haz clic para seleccionar</h6>
+                                <p class="text-muted mb-3" style="font-size: 0.88rem;">
+                                    Formatos soportados: PDF. Tamaño máximo: 10MB.
+                                </p>
+                                <input type="file" name="archivo" id="fileInput" accept=".pdf" style="display: none;" required onchange="document.getElementById('submitBtn').style.display='block'; document.getElementById('fileName').textContent = this.files[0] ? this.files[0].name : '';">
+                                <div id="fileName" class="text-primary fw-semibold mt-2"></div>
+                            </div>
+                            <div class="text-end mt-3">
+                                <button type="submit" class="btn btn-dark px-4" id="submitBtn" style="display: none;">
+                                    <i class="bi bi-upload me-1"></i> Subir Archivo
+                                </button>
+                            </div>
+                        </form>
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <i class="bi bi-journal-x text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                            <h5 class="fw-bold text-dark">Aún no has solicitado un programa</h5>
+                            <p class="text-muted">Debes solicitar inscripción en un programa desde el catálogo antes de poder subir tus documentos iniciales.</p>
+                            <a href="<?= BASE_URL ?>/alumno/catalogo" class="btn btn-primary mt-2">Ir al Catálogo</a>
                         </div>
-                        <div class="text-end mt-3">
-                            <button type="submit" class="btn btn-dark px-4" id="submitBtn" style="display: none;">
-                                <i class="bi bi-upload me-1"></i> Subir Archivo
-                            </button>
-                        </div>
-                    </form>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Archivos Subidos -->

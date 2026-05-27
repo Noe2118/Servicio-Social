@@ -209,6 +209,8 @@ class AlumnoController extends Controller {
             return;
         }
 
+        $asignacion = $this->asignacionModel->obtenerAsignacionActiva($this->alumno['id_alumno']);
+
         $documentos = $this->documentoModel->obtenerPorAlumno($this->alumno['id_alumno']);
         $estadoDocumentos = $this->documentoModel->obtenerEstadoDocumentosIniciales($this->alumno['id_alumno']);
 
@@ -225,6 +227,7 @@ class AlumnoController extends Controller {
         $this->view('alumno/expediente', [
             'titulo' => 'Mi Expediente y Seguimiento',
             'alumno' => $this->alumno,
+            'asignacion' => $asignacion,
             'documentos' => $documentos,
             'estadoDocumentos' => $estadoDocumentos,
             'progresoExpediente' => $progresoExpediente,
@@ -244,6 +247,13 @@ class AlumnoController extends Controller {
 
         if (!$this->alumno) {
             die("No se encontró perfil de alumno.");
+        }
+
+        $asignacion = $this->asignacionModel->obtenerAsignacionActiva($this->alumno['id_alumno']);
+        if (!$asignacion) {
+            $_SESSION['flash_error'] = 'No puedes subir documentos hasta que solicites inscripción a un programa.';
+            $this->redirect('alumno/expediente');
+            return;
         }
 
         $tipoDocumento = $_POST['tipo_documento'] ?? '';

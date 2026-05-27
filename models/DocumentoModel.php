@@ -113,9 +113,11 @@ class DocumentoModel {
 
     public function obtenerDocumentosConAlumno(): array {
         $stmt = $this->db->query(
-            "SELECT d.*, a.nombre_completo, a.no_control 
+            "SELECT d.*, a.nombre_completo, a.no_control, asig.id_programa, asig.estado_asignacion, p.nombre_programa
              FROM documentos d 
              JOIN alumnos a ON d.id_alumno = a.id_alumno 
+             LEFT JOIN asignaciones asig ON a.id_alumno = asig.id_alumno AND asig.estado_asignacion IN ('Pendiente', 'Activo')
+             LEFT JOIN programas p ON asig.id_programa = p.id_programa
              WHERE d.estado_validacion IN ('Nuevo', 'Corregido') 
              ORDER BY d.fecha_subida DESC"
         );
@@ -124,9 +126,11 @@ class DocumentoModel {
 
     public function obtenerDocumentoPorIdAdmin(int $idDocumento): ?array {
         $stmt = $this->db->prepare(
-            "SELECT d.*, a.nombre_completo, a.no_control 
+            "SELECT d.*, a.nombre_completo, a.no_control, a.creditos_completados, asig.id_programa, asig.estado_asignacion, p.nombre_programa 
              FROM documentos d 
              JOIN alumnos a ON d.id_alumno = a.id_alumno 
+             LEFT JOIN asignaciones asig ON a.id_alumno = asig.id_alumno AND asig.estado_asignacion IN ('Pendiente', 'Activo')
+             LEFT JOIN programas p ON asig.id_programa = p.id_programa
              WHERE d.id_documento = :id"
         );
         $stmt->execute(['id' => $idDocumento]);

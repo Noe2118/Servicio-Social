@@ -5,19 +5,19 @@
 <p class="page-subtitle">Revisa y aprueba los documentos enviados por los alumnos.</p>
 
 <!-- Flash Messages -->
-<?php if (!empty($_SESSION['success'])): ?>
+<?php if (!empty($_SESSION['flash_success'])): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle me-2"></i><?= htmlspecialchars($_SESSION['success']) ?>
+        <i class="bi bi-check-circle me-2"></i><?= htmlspecialchars($_SESSION['flash_success']) ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <?php unset($_SESSION['success']); ?>
+    <?php unset($_SESSION['flash_success']); ?>
 <?php endif; ?>
-<?php if (!empty($_SESSION['error'])): ?>
+<?php if (!empty($_SESSION['flash_error'])): ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle me-2"></i><?= htmlspecialchars($_SESSION['error']) ?>
+        <i class="bi bi-exclamation-triangle me-2"></i><?= htmlspecialchars($_SESSION['flash_error']) ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <?php unset($_SESSION['error']); ?>
+    <?php unset($_SESSION['flash_error']); ?>
 <?php endif; ?>
 
 <div class="row g-4">
@@ -115,7 +115,7 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="d-flex gap-2 pt-3 border-top">
+                    <div class="d-flex gap-2 pt-3 border-top mb-4">
                         <form method="POST" action="<?= BASE_URL ?>/dgtyv/aprobar_documento" class="flex-fill">
                             <input type="hidden" name="id_documento" value="<?= (int)($documentoSeleccionado['id_documento'] ?? 0) ?>">
                             <textarea name="comentarios" class="d-none" id="comentarios_aprobar"></textarea>
@@ -130,6 +130,67 @@
                                 <i class="bi bi-x-lg me-1"></i>Rechazar Documento
                             </button>
                         </form>
+                    </div>
+
+                    <!-- Lógica de Inscripción / Baja del Alumno -->
+                    <div class="border p-3 rounded bg-light">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-person-badge"></i> Estado en el Programa</h6>
+                        
+                        <p class="mb-1" style="font-size: 0.9rem;">
+                            <strong>Programa Solicitado:</strong> <?= htmlspecialchars($documentoSeleccionado['nombre_programa'] ?? 'N/A') ?>
+                        </p>
+                        <p class="mb-3" style="font-size: 0.9rem;">
+                            <strong>Créditos Completados:</strong> <?= htmlspecialchars($documentoSeleccionado['creditos_completados'] ?? '0') ?>%
+                        </p>
+
+                        <?php if (($documentoSeleccionado['estado_asignacion'] ?? '') === 'Pendiente'): ?>
+                            <div class="alert alert-warning py-2 mb-2" style="font-size: 0.85rem;">
+                                El alumno está pendiente de ser aceptado en el programa. Revisa que sus documentos iniciales sean correctos antes de aceptarlo.
+                            </div>
+                            <form method="POST" action="<?= BASE_URL ?>/dgtyv/aceptar_alumno">
+                                <input type="hidden" name="id_alumno" value="<?= (int)($documentoSeleccionado['id_alumno'] ?? 0) ?>">
+                                <input type="hidden" name="id_programa" value="<?= (int)($documentoSeleccionado['id_programa'] ?? 0) ?>">
+                                <button type="submit" class="btn btn-primary w-100" onclick="return confirm('¿Confirmas que deseas aceptar al alumno en el programa?');">
+                                    <i class="bi bi-person-check-fill me-1"></i> Aceptar Alumno en el Programa
+                                </button>
+                            </form>
+                        <?php elseif (($documentoSeleccionado['estado_asignacion'] ?? '') === 'Activo'): ?>
+                            <div class="alert alert-success py-2 mb-2" style="font-size: 0.85rem;">
+                                El alumno ya está ACTIVO en este programa.
+                            </div>
+                            <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#modalBajaAdmin">
+                                <i class="bi bi-person-x-fill me-1"></i> Dar de Baja al Alumno
+                            </button>
+
+                            <!-- Modal de Baja Admin -->
+                            <div class="modal fade" id="modalBajaAdmin" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form method="POST" action="<?= BASE_URL ?>/dgtyv/dar_baja_alumno">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Dar de Baja</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Estás a punto de dar de baja a <strong><?= htmlspecialchars($documentoSeleccionado['nombre_completo']) ?></strong> del programa.</p>
+                                                <input type="hidden" name="id_alumno" value="<?= (int)($documentoSeleccionado['id_alumno'] ?? 0) ?>">
+                                                <input type="hidden" name="id_programa" value="<?= (int)($documentoSeleccionado['id_programa'] ?? 0) ?>">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Motivo de la baja (Obligatorio)</label>
+                                                    <textarea name="motivo" class="form-control" rows="3" required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-danger">Confirmar Baja</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <span class="badge bg-secondary">Estado actual: <?= htmlspecialchars($documentoSeleccionado['estado_asignacion'] ?? 'Ninguno') ?></span>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 27, 2026 at 07:22 PM
+-- Generation Time: May 27, 2026 at 09:05 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -44,8 +44,9 @@ CREATE TABLE `alumnos` (
 -- Dumping data for table `alumnos`
 --
 
-INSERT INTO `alumnos` (`id_alumno`, `id_usuario`, `no_control`, `nombre_completo`, `carrera`, `periodo_actual`, `porcentaje_creditos`, `horas_completadas`, `estado_servicio`) VALUES
-(1, 3, '22560001', 'Juan Carlos Pérez López', 'Ing. en Sistemas Computacionales', 'Ene-Jun 2026', 75.50, 500, 'En curso');
+INSERT INTO `alumnos` (`id_alumno`, `id_usuario`, `no_control`, `nombre_completo`, `carrera`, `periodo_actual`, `porcentaje_creditos`, `horas_completadas`, `estado_servicio`, `notificacion`) VALUES
+(1, 3, '22560001', 'Juan Carlos Pérez López', 'Ing. en Sistemas Computacionales', 'Ene-Jun 2026', 75.50, 500, 'En curso', NULL),
+(2, 4, '23390085', 'Saul Misael Colli Kumul', 'Ingeniería en Sistemas Computacionales', 'Ene-Jun 2026', 100.00, 0, 'Sin Iniciar', NULL);
 
 -- --------------------------------------------------------
 
@@ -58,7 +59,8 @@ CREATE TABLE `asignaciones` (
   `id_alumno` int(11) NOT NULL,
   `id_programa` int(11) NOT NULL,
   `fecha_asignacion` date NOT NULL,
-  `estado_asignacion` enum('Pendiente','Activo','Concluido','Baja') DEFAULT 'Pendiente'
+  `estado_asignacion` enum('Pendiente','Activo','Concluido','Baja') DEFAULT 'Pendiente',
+  `motivo_baja` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -67,6 +69,44 @@ CREATE TABLE `asignaciones` (
 
 INSERT INTO `asignaciones` (`id_asignacion`, `id_alumno`, `id_programa`, `fecha_asignacion`, `estado_asignacion`) VALUES
 (1, 1, 1, '2025-08-15', 'Activo');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ciclos`
+--
+
+CREATE TABLE `ciclos` (
+  `id_ciclo` int(11) NOT NULL,
+  `nombre_ciclo` varchar(100) NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ciclos`
+--
+
+INSERT INTO `ciclos` (`id_ciclo`, `nombre_ciclo`, `fecha_inicio`, `fecha_fin`) VALUES
+(1, 'Enero - Junio 2026', '2026-01-01', '2026-06-30');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ciclos_programas`
+--
+
+CREATE TABLE `ciclos_programas` (
+  `id_programa` int(11) NOT NULL,
+  `id_ciclo` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ciclos_programas`
+--
+
+INSERT INTO `ciclos_programas` (`id_programa`, `id_ciclo`) VALUES
+(4, 1);
 
 -- --------------------------------------------------------
 
@@ -131,6 +171,28 @@ CREATE TABLE `evaluaciones` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `horarios_programas`
+--
+
+CREATE TABLE `horarios_programas` (
+  `id_horario` int(11) NOT NULL,
+  `id_programa` int(11) NOT NULL,
+  `dia_semana` enum('Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo') NOT NULL,
+  `hora_inicio` time NOT NULL,
+  `hora_fin` time NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `horarios_programas`
+--
+
+INSERT INTO `horarios_programas` (`id_horario`, `id_programa`, `dia_semana`, `hora_inicio`, `hora_fin`) VALUES
+(2, 4, 'Lunes', '12:01:00', '20:01:00'),
+(3, 4, 'Martes', '12:01:00', '20:01:00');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `programas`
 --
 
@@ -158,45 +220,8 @@ CREATE TABLE `programas` (
 INSERT INTO `programas` (`id_programa`, `id_dependencia`, `folio_programa`, `nombre_programa`, `modalidad`, `descripcion`, `perfiles_requeridos`, `cupos_totales`, `cupos_ocupados`, `ubicacion`, `responsable_nombre`, `responsable_contacto`, `estado_aprobacion`, `fecha_envio`) VALUES
 (1, 1, 'SS-2026-001', 'Reforestación y Cuidado Ambiental', 'Presencial', 'Apoyo en actividades de reforestación en zonas de selva baja en Othón P. Blanco.', 'Biología, Arquitectura, Ingeniería Civil', 10, 0, NULL, 'Ing. Carlos Mendoza', 'cmendoza@conafor.gob.mx', 'Aprobado', '2026-05-25'),
 (2, 1, 'SS-2026-002', 'Desarrollo de Sistema de Inventario', 'Virtual', 'Creación de software web para control de inventario de flora rescatada.', 'Ingeniería en Sistemas Computacionales, Informática', 3, 0, NULL, 'Lic. Ana Torres', 'atorres@conafor.gob.mx', 'Aprobado', '2026-05-25'),
-(3, 1, 'SS-2026-003', 'Campaña de Concientización Digital', 'Híbrida', 'Diseño multimedia para redes sociales fomentando la prevención de incendios.', 'Lic. en Administración, Arquitectura', 2, 0, NULL, 'Mtro. Roberto Ruiz', 'rruiz@conafor.gob.mx', 'Aprobado', '2026-05-25');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `ciclos`
---
-
-CREATE TABLE `ciclos` (
-  `id_ciclo` int(11) NOT NULL,
-  `nombre_ciclo` varchar(100) NOT NULL,
-  `fecha_inicio` date NOT NULL,
-  `fecha_fin` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `ciclos_programas`
---
-
-CREATE TABLE `ciclos_programas` (
-  `id_programa` int(11) NOT NULL,
-  `id_ciclo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `horarios_programas`
---
-
-CREATE TABLE `horarios_programas` (
-  `id_horario` int(11) NOT NULL,
-  `id_programa` int(11) NOT NULL,
-  `dia_semana` enum('Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo') NOT NULL,
-  `hora_inicio` time NOT NULL,
-  `hora_fin` time NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+(3, 1, 'SS-2026-003', 'Campaña de Concientización Digital', 'Híbrida', 'Diseño multimedia para redes sociales fomentando la prevención de incendios.', 'Lic. en Administración, Arquitectura', 2, 0, NULL, 'Mtro. Roberto Ruiz', 'rruiz@conafor.gob.mx', 'Aprobado', '2026-05-25'),
+(4, 1, 'PRG-05B9B8', 'Test', 'Presencial', 'Pruebitassss', 'Ser chingón en todo', 15, 0, 'Mi casa jajakla', 'Saulini', 'saulmisaelcolli@gmail.com', 'Aprobado', '2026-05-27');
 
 -- --------------------------------------------------------
 
@@ -219,31 +244,12 @@ CREATE TABLE `usuarios` (
 INSERT INTO `usuarios` (`id_usuario`, `correo`, `password_hash`, `rol`, `fecha_creacion`) VALUES
 (1, 'contacto@conafor.gob.mx', '$2y$10$eYbjZ7HywQhM17XjczG57eqqk6UZdvFSshJND20PMRAhQAR6ad5s.', 'Dependencia', '2026-05-25 19:42:21'),
 (2, 'admin@itch.edu.mx', '$2y$10$58Vc/gWyrxD0GD/.MErrbuxQMduhsnMypeyhKjq27F.v6GbnDLkA6', 'DGTyV', '2026-05-25 19:42:36'),
-(3, 'alumno@itch.edu.mx', '$2y$10$/Brb8VFLzdwrSHnKkp.hC.NcbBqoMt5BtEsiZ5eEF95o/SIKvy8le', 'Alumno', '2026-05-26 17:26:40');
+(3, 'alumno@itch.edu.mx', '$2y$10$/Brb8VFLzdwrSHnKkp.hC.NcbBqoMt5BtEsiZ5eEF95o/SIKvy8le', 'Alumno', '2026-05-26 17:26:40'),
+(4, 'saul@gmail.com', '$2y$10$JwDAqZK4bSLk2dkK4.6UQexAsh1lCy/rl8ZjjehImfUEnT8P/lAay', 'Alumno', '2026-05-27 18:19:30');
 
 --
 -- Indexes for dumped tables
 --
-
---
--- Indexes for table `ciclos`
---
-ALTER TABLE `ciclos`
-  ADD PRIMARY KEY (`id_ciclo`);
-
---
--- Indexes for table `ciclos_programas`
---
-ALTER TABLE `ciclos_programas`
-  ADD PRIMARY KEY (`id_programa`,`id_ciclo`),
-  ADD KEY `id_ciclo` (`id_ciclo`);
-
---
--- Indexes for table `horarios_programas`
---
-ALTER TABLE `horarios_programas`
-  ADD PRIMARY KEY (`id_horario`),
-  ADD KEY `id_programa` (`id_programa`);
 
 --
 -- Indexes for table `alumnos`
@@ -261,6 +267,19 @@ ALTER TABLE `asignaciones`
   ADD PRIMARY KEY (`id_asignacion`),
   ADD KEY `id_alumno` (`id_alumno`),
   ADD KEY `id_programa` (`id_programa`);
+
+--
+-- Indexes for table `ciclos`
+--
+ALTER TABLE `ciclos`
+  ADD PRIMARY KEY (`id_ciclo`);
+
+--
+-- Indexes for table `ciclos_programas`
+--
+ALTER TABLE `ciclos_programas`
+  ADD PRIMARY KEY (`id_programa`,`id_ciclo`),
+  ADD KEY `id_ciclo` (`id_ciclo`);
 
 --
 -- Indexes for table `dependencias`
@@ -286,6 +305,13 @@ ALTER TABLE `evaluaciones`
   ADD KEY `id_programa` (`id_programa`);
 
 --
+-- Indexes for table `horarios_programas`
+--
+ALTER TABLE `horarios_programas`
+  ADD PRIMARY KEY (`id_horario`),
+  ADD KEY `id_programa` (`id_programa`);
+
+--
 -- Indexes for table `programas`
 --
 ALTER TABLE `programas`
@@ -305,28 +331,22 @@ ALTER TABLE `usuarios`
 --
 
 --
--- AUTO_INCREMENT for table `ciclos`
---
-ALTER TABLE `ciclos`
-  MODIFY `id_ciclo` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `horarios_programas`
---
-ALTER TABLE `horarios_programas`
-  MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `alumnos`
 --
 ALTER TABLE `alumnos`
-  MODIFY `id_alumno` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_alumno` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `asignaciones`
 --
 ALTER TABLE `asignaciones`
   MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `ciclos`
+--
+ALTER TABLE `ciclos`
+  MODIFY `id_ciclo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `dependencias`
@@ -347,16 +367,22 @@ ALTER TABLE `evaluaciones`
   MODIFY `id_evaluacion` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `horarios_programas`
+--
+ALTER TABLE `horarios_programas`
+  MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `programas`
 --
 ALTER TABLE `programas`
-  MODIFY `id_programa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_programa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables
@@ -374,6 +400,13 @@ ALTER TABLE `alumnos`
 ALTER TABLE `asignaciones`
   ADD CONSTRAINT `asignaciones_ibfk_1` FOREIGN KEY (`id_alumno`) REFERENCES `alumnos` (`id_alumno`) ON DELETE CASCADE,
   ADD CONSTRAINT `asignaciones_ibfk_2` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `ciclos_programas`
+--
+ALTER TABLE `ciclos_programas`
+  ADD CONSTRAINT `ciclos_programas_ibfk_1` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE,
+  ADD CONSTRAINT `ciclos_programas_ibfk_2` FOREIGN KEY (`id_ciclo`) REFERENCES `ciclos` (`id_ciclo`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `dependencias`
@@ -395,24 +428,16 @@ ALTER TABLE `evaluaciones`
   ADD CONSTRAINT `evaluaciones_ibfk_2` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE;
 
 --
--- Constraints for table `programas`
---
-ALTER TABLE `programas`
-  ADD CONSTRAINT `programas_ibfk_1` FOREIGN KEY (`id_dependencia`) REFERENCES `dependencias` (`id_dependencia`) ON DELETE CASCADE;
-
---
--- Constraints for table `ciclos_programas`
---
-ALTER TABLE `ciclos_programas`
-  ADD CONSTRAINT `ciclos_programas_ibfk_1` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE,
-  ADD CONSTRAINT `ciclos_programas_ibfk_2` FOREIGN KEY (`id_ciclo`) REFERENCES `ciclos` (`id_ciclo`) ON DELETE CASCADE;
-
---
 -- Constraints for table `horarios_programas`
 --
 ALTER TABLE `horarios_programas`
   ADD CONSTRAINT `horarios_programas_ibfk_1` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE;
 
+--
+-- Constraints for table `programas`
+--
+ALTER TABLE `programas`
+  ADD CONSTRAINT `programas_ibfk_1` FOREIGN KEY (`id_dependencia`) REFERENCES `dependencias` (`id_dependencia`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

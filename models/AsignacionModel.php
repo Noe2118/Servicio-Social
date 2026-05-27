@@ -74,4 +74,41 @@ class AsignacionModel {
         ]);
         return (int) $stmt->fetchColumn() > 0;
     }
+
+    /**
+     * Actualiza el estado de la asignación y guarda el motivo en caso de baja o rechazo.
+     */
+    public function actualizarEstadoAsignacion(int $idAlumno, int $idPrograma, string $estado, ?string $motivo = null): bool {
+        $stmt = $this->db->prepare(
+            "UPDATE asignaciones 
+             SET estado_asignacion = :estado, motivo_baja = :motivo 
+             WHERE id_alumno = :id_alumno AND id_programa = :id_programa"
+        );
+        $stmt->execute([
+            'estado' => $estado,
+            'motivo' => $motivo,
+            'id_alumno' => $idAlumno,
+            'id_programa' => $idPrograma
+        ]);
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Obtiene los alumnos con asignación activa en los programas de una dependencia
+     */
+    public function obtenerAlumnosActivosPorDependencia(int $idDependencia): array {
+        $stmt = $this->db->prepare(
+            "SELECT a.id_alumno, a.no_control, a.nombre_completo, a.carrera, a.estado_servicio,
+                    asig.fecha_asignacion, asig.estado_asignacion, asig.motivo_baja,
+                    p.id_programa, p.nombre_programa, p.folio_programa
+             FROM asignaciones asig
+             INNER JOIN alumnos a ON asig.id_alumno = a.id_alumno
+             INNER JOIN programas p ON asig.id_programa = p.id_programa
+             WHERE p.id_dependencia = :id_dependencia
+               AND asig.estado_asignacion = 'Activo'
+             ORDER BY p.nombre_programa ASC, a.nombre_completo ASC"
+        );
+        $stmt->execute(['id_dependencia' => $idDependencia]);
+        return $stmt->fetchAll();
+    }
 }

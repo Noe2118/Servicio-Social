@@ -5,6 +5,7 @@ class DgtyvController extends Controller {
     private DocumentoModel $documentoModel;
     private AlumnoModel $alumnoModel;
     private CicloModel $cicloModel;
+    private AsignacionModel $asignacionModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -22,6 +23,9 @@ class DgtyvController extends Controller {
 
         require_once APP_PATH . '/models/CicloModel.php';
         $this->cicloModel = new CicloModel();
+
+        require_once APP_PATH . '/models/AsignacionModel.php';
+        $this->asignacionModel = new AsignacionModel();
     }
 
     public function index(): void {
@@ -219,6 +223,52 @@ class DgtyvController extends Controller {
         if ($id > 0) {
             $this->documentoModel->actualizarEstadoConComentarios($id, 'Rechazado', $comentarios);
             $_SESSION['flash_error'] = 'Documento rechazado.';
+        }
+        $this->redirect('dgtyv/expedientes');
+    }
+
+    /**
+     * POST: Aceptar alumno en el programa
+     */
+    public function aceptar_alumno(): void {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $idAlumno = (int) ($_POST['id_alumno'] ?? 0);
+            $idPrograma = (int) ($_POST['id_programa'] ?? 0);
+            if ($idAlumno > 0 && $idPrograma > 0) {
+                if ($this->asignacionModel->actualizarEstadoAsignacion($idAlumno, $idPrograma, 'Activo')) {
+                    // Update the student's status to En curso
+                    $db = Database::getInstance()->getConnection();
+                    $db->prepare("UPDATE alumnos SET estado_servicio = 'En curso' WHERE id_alumno = ?")->execute([$idAlumno]);
+                    
+                    $_SESSION['flash_success'] = 'Alumno aceptado en el programa exitosamente.';
+                } else {
+                    $_SESSION['flash_error'] = 'No se pudo aceptar al alumno.';
+                }
+            }
+        }
+        $this->redirect('dgtyv/expedientes');
+    }
+
+    /**
+     * POST: Dar de baja a un alumno (Director)
+     */
+    public function dar_baja_alumno(): void {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $idAlumno = (int) ($_POST['id_alumno'] ?? 0);
+            $idPrograma = (int) ($_POST['id_programa'] ?? 0);
+            $motivo = trim($_POST['motivo'] ?? '');
+            if ($idAlumno > 0 && $idPrograma > 0 && !empty($motivo)) {
+                if ($this->asignacionModel->actualizarEstadoAsignacion($idAlumno, $idPrograma, 'Baja', $motivo)) {
+                    $db = Database::getInstance()->getConnection();
+                    $db->prepare("UPDATE alumnos SET estado_servicio = 'Interrumpido' WHERE id_alumno = ?")->execute([$idAlumno]);
+
+                    $_SESSION['flash_success'] = 'Alumno dado de baja correctamente.';
+                } else {
+                    $_SESSION['flash_error'] = 'No se pudo dar de baja al alumno.';
+                }
+            } else {
+                $_SESSION['flash_error'] = 'El motivo de baja es obligatorio.';
+            }
         }
         $this->redirect('dgtyv/expedientes');
     }

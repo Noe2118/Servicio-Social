@@ -4,6 +4,8 @@ class DependenciaController extends Controller {
     private $programaModel;
     private $evaluacionModel;
     private $cicloModel;
+    private $asignacionModel;
+    private $documentoModel;
     private $id_dependencia;
 
     public function __construct() {
@@ -18,11 +20,15 @@ class DependenciaController extends Controller {
         require_once APP_PATH . '/models/ProgramaModel.php';
         require_once APP_PATH . '/models/EvaluacionModel.php';
         require_once APP_PATH . '/models/CicloModel.php';
+        require_once APP_PATH . '/models/AsignacionModel.php';
+        require_once APP_PATH . '/models/DocumentoModel.php';
 
         $this->dependenciaModel = new DependenciaModel();
         $this->programaModel = new ProgramaModel();
         $this->evaluacionModel = new EvaluacionModel();
         $this->cicloModel = new CicloModel();
+        $this->asignacionModel = new AsignacionModel();
+        $this->documentoModel = new DocumentoModel();
 
         $this->id_dependencia = $this->dependenciaModel->getIdDependenciaPorUsuario($_SESSION['id_usuario']);
     }
@@ -49,6 +55,13 @@ class DependenciaController extends Controller {
     }
 
     public function alumnos() {
+        $alumnos = $this->asignacionModel->obtenerAlumnosActivosPorDependencia($this->id_dependencia);
+        $this->view('dependencia/alumnos', [
+            'alumnos' => $alumnos
+        ]);
+    }
+
+    public function evaluaciones() {
         $alumnos = $this->evaluacionModel->getAlumnosParaEvaluacion($this->id_dependencia);
         
         $alumno_seleccionado = null;
@@ -67,6 +80,70 @@ class DependenciaController extends Controller {
             'alumnos' => $alumnos,
             'alumno_seleccionado' => $alumno_seleccionado
         ]);
+    }
+
+    public function perfil_alumno(int $idAlumno = 0) {
+        if ($idAlumno <= 0) {
+            $this->redirect('dependencia/alumnos');
+            return;
+        }
+
+        // Verify if the student is active in one of the dependency's programs
+        $alumnosActivos = $this->asignacionModel->obtenerAlumnosActivosPorDependencia($this->id_dependencia);
+        $alumno_seleccionado = null;
+        foreach ($alumnosActivos as $al) {
+            if ($al['id_alumno'] == $idAlumno) {
+                $alumno_seleccionado = $al;
+                break;
+            }
+        }
+
+        if (!$alumno_seleccionado) {
+            $_SESSION['flash_error'] = 'El alumno no está asignado a tu dependencia o no está activo.';
+            $this->redirect('dependencia/alumnos');
+            return;
+        }
+
+        // Get documents
+        require_once APP_PATH . '/models/AlumnoModel.php';
+        $alumnoModel = new AlumnoModel();
+        $alumnoDetalle = $alumnoModel->obtenerPorId($idAlumno);
+        $documentos = $this->documentoModel->obtenerPorAlumno($idAlumno);
+
+        $this->view('dependencia/perfil_alumno', [
+            'alumno' => $alumnoDetalle,
+            'asignacion' => $alumno_seleccionado,
+            'documentos' => $documentos
+        ]);
+    }
+
+    public function dar_baja_alumno() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $idAlumno = (int) ($_POST['id_alumno'] ?? 0);
+            $idPrograma = (int) ($_POST['id_programa'] ?? 0);
+            $motivo = trim($_POST['motivo'] ?? '');
+            
+            if ($idAlumno > 0 && $idPrograma > 0 && !empty($motivo)) {
+                // Verify ownership of the program
+                $programa = $this->programaModel->obtenerProgramaPorId($idPrograma);
+                if ($programa && $programa['id_dependencia'] == $this->id_dependencia) {
+                    if ($this->asignacionModel->actualizarEstadoAsignacion($idAlumno, $idPrograma, 'Baja', $motivo)) {
+                        require_once APP_PATH . '/models/Database.php';
+                        $db = Database::getInstance()->getConnection();
+                        $db->prepare("UPDATE alumnos SET estado_servicio = 'Interrumpido' WHERE id_alumno = ?")->execute([$idAlumno]);
+
+                        $_SESSION['flash_success'] = 'Alumno dado de baja correctamente.';
+                    } else {
+                        $_SESSION['flash_error'] = 'No se pudo dar de baja al alumno.';
+                    }
+                } else {
+                    $_SESSION['flash_error'] = 'No tienes permiso para modificar este programa.';
+                }
+            } else {
+                $_SESSION['flash_error'] = 'El motivo de baja es obligatorio.';
+            }
+        }
+        $this->redirect('dependencia/alumnos');
     }
 
     public function guardarEvaluacion() {
