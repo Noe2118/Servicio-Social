@@ -8,6 +8,17 @@ class ProgramaModel {
     }
 
     /**
+     * Obtener todos los programas de una dependencia específica.
+     */
+    public function getProgramasPorDependencia(int $id_dependencia): array {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM programas WHERE id_dependencia = :id ORDER BY nombre_programa ASC"
+        );
+        $stmt->execute(['id' => $id_dependencia]);
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Obtener todos los programas aprobados con cupos disponibles.
      * JOIN con dependencias para mostrar el nombre de la organización.
      * Filtros opcionales por modalidad y dependencia.

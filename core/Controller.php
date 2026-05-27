@@ -36,8 +36,7 @@ class Controller {
      * @param string $url Ruta relativa (ej. 'alumno/dashboard')
      */
     protected function redirect($url) {
-        $base = defined('BASE_URL') ? BASE_URL : '';
-        header('Location: ' . $base . '/' . $url);
+        header('Location: ' . BASE_URL . '/' . ltrim($url, '/'));
         exit;
     }
 }
