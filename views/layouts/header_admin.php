@@ -427,6 +427,9 @@
         <a href="<?= BASE_URL ?>/dgtyv/expedientes" class="nav-link <?= ($paginaActiva ?? '') === 'expedientes' ? 'active' : '' ?>">
             <i class="bi bi-folder2-open"></i> Revisión de Expedientes
         </a>
+        <a href="<?= BASE_URL ?>/dgtyv/ciclos" class="nav-link <?= ($paginaActiva ?? '') === 'ciclos' ? 'active' : '' ?>">
+            <i class="bi bi-calendar-range"></i> Gestión de Ciclos
+        </a>
         <a href="<?= BASE_URL ?>/dgtyv/liberacion" class="nav-link <?= ($paginaActiva ?? '') === 'liberacion' ? 'active' : '' ?>">
             <i class="bi bi-award"></i> Liberación
         </a>

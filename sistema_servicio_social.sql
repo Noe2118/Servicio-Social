@@ -144,7 +144,6 @@ CREATE TABLE `programas` (
   `perfiles_requeridos` text DEFAULT NULL,
   `cupos_totales` int(11) NOT NULL,
   `cupos_ocupados` int(11) DEFAULT 0,
-  `horario` varchar(100) DEFAULT NULL,
   `ubicacion` varchar(150) DEFAULT NULL,
   `responsable_nombre` varchar(100) NOT NULL,
   `responsable_contacto` varchar(150) DEFAULT NULL,
@@ -156,10 +155,48 @@ CREATE TABLE `programas` (
 -- Dumping data for table `programas`
 --
 
-INSERT INTO `programas` (`id_programa`, `id_dependencia`, `folio_programa`, `nombre_programa`, `modalidad`, `descripcion`, `perfiles_requeridos`, `cupos_totales`, `cupos_ocupados`, `horario`, `ubicacion`, `responsable_nombre`, `responsable_contacto`, `estado_aprobacion`, `fecha_envio`) VALUES
-(1, 1, 'SS-2026-001', 'Reforestación y Cuidado Ambiental', 'Presencial', 'Apoyo en actividades de reforestación en zonas de selva baja en Othón P. Blanco.', 'Biología, Arquitectura, Ingeniería Civil', 10, 0, NULL, NULL, 'Ing. Carlos Mendoza', 'cmendoza@conafor.gob.mx', 'Aprobado', '2026-05-25'),
-(2, 1, 'SS-2026-002', 'Desarrollo de Sistema de Inventario', 'Virtual', 'Creación de software web para control de inventario de flora rescatada.', 'Ingeniería en Sistemas Computacionales, Informática', 3, 0, NULL, NULL, 'Lic. Ana Torres', 'atorres@conafor.gob.mx', 'Aprobado', '2026-05-25'),
-(3, 1, 'SS-2026-003', 'Campaña de Concientización Digital', 'Híbrida', 'Diseño multimedia para redes sociales fomentando la prevención de incendios.', 'Lic. en Administración, Arquitectura', 2, 0, NULL, NULL, 'Mtro. Roberto Ruiz', 'rruiz@conafor.gob.mx', 'Aprobado', '2026-05-25');
+INSERT INTO `programas` (`id_programa`, `id_dependencia`, `folio_programa`, `nombre_programa`, `modalidad`, `descripcion`, `perfiles_requeridos`, `cupos_totales`, `cupos_ocupados`, `ubicacion`, `responsable_nombre`, `responsable_contacto`, `estado_aprobacion`, `fecha_envio`) VALUES
+(1, 1, 'SS-2026-001', 'Reforestación y Cuidado Ambiental', 'Presencial', 'Apoyo en actividades de reforestación en zonas de selva baja en Othón P. Blanco.', 'Biología, Arquitectura, Ingeniería Civil', 10, 0, NULL, 'Ing. Carlos Mendoza', 'cmendoza@conafor.gob.mx', 'Aprobado', '2026-05-25'),
+(2, 1, 'SS-2026-002', 'Desarrollo de Sistema de Inventario', 'Virtual', 'Creación de software web para control de inventario de flora rescatada.', 'Ingeniería en Sistemas Computacionales, Informática', 3, 0, NULL, 'Lic. Ana Torres', 'atorres@conafor.gob.mx', 'Aprobado', '2026-05-25'),
+(3, 1, 'SS-2026-003', 'Campaña de Concientización Digital', 'Híbrida', 'Diseño multimedia para redes sociales fomentando la prevención de incendios.', 'Lic. en Administración, Arquitectura', 2, 0, NULL, 'Mtro. Roberto Ruiz', 'rruiz@conafor.gob.mx', 'Aprobado', '2026-05-25');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ciclos`
+--
+
+CREATE TABLE `ciclos` (
+  `id_ciclo` int(11) NOT NULL,
+  `nombre_ciclo` varchar(100) NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ciclos_programas`
+--
+
+CREATE TABLE `ciclos_programas` (
+  `id_programa` int(11) NOT NULL,
+  `id_ciclo` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `horarios_programas`
+--
+
+CREATE TABLE `horarios_programas` (
+  `id_horario` int(11) NOT NULL,
+  `id_programa` int(11) NOT NULL,
+  `dia_semana` enum('Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo') NOT NULL,
+  `hora_inicio` time NOT NULL,
+  `hora_fin` time NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -187,6 +224,26 @@ INSERT INTO `usuarios` (`id_usuario`, `correo`, `password_hash`, `rol`, `fecha_c
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `ciclos`
+--
+ALTER TABLE `ciclos`
+  ADD PRIMARY KEY (`id_ciclo`);
+
+--
+-- Indexes for table `ciclos_programas`
+--
+ALTER TABLE `ciclos_programas`
+  ADD PRIMARY KEY (`id_programa`,`id_ciclo`),
+  ADD KEY `id_ciclo` (`id_ciclo`);
+
+--
+-- Indexes for table `horarios_programas`
+--
+ALTER TABLE `horarios_programas`
+  ADD PRIMARY KEY (`id_horario`),
+  ADD KEY `id_programa` (`id_programa`);
 
 --
 -- Indexes for table `alumnos`
@@ -246,6 +303,18 @@ ALTER TABLE `usuarios`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `ciclos`
+--
+ALTER TABLE `ciclos`
+  MODIFY `id_ciclo` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `horarios_programas`
+--
+ALTER TABLE `horarios_programas`
+  MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `alumnos`
@@ -330,6 +399,20 @@ ALTER TABLE `evaluaciones`
 --
 ALTER TABLE `programas`
   ADD CONSTRAINT `programas_ibfk_1` FOREIGN KEY (`id_dependencia`) REFERENCES `dependencias` (`id_dependencia`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `ciclos_programas`
+--
+ALTER TABLE `ciclos_programas`
+  ADD CONSTRAINT `ciclos_programas_ibfk_1` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE,
+  ADD CONSTRAINT `ciclos_programas_ibfk_2` FOREIGN KEY (`id_ciclo`) REFERENCES `ciclos` (`id_ciclo`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `horarios_programas`
+--
+ALTER TABLE `horarios_programas`
+  ADD CONSTRAINT `horarios_programas_ibfk_1` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

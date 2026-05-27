@@ -3,6 +3,7 @@ class DependenciaController extends Controller {
     private $dependenciaModel;
     private $programaModel;
     private $evaluacionModel;
+    private $cicloModel;
     private $id_dependencia;
 
     public function __construct() {
@@ -16,10 +17,12 @@ class DependenciaController extends Controller {
         require_once APP_PATH . '/models/DependenciaModel.php';
         require_once APP_PATH . '/models/ProgramaModel.php';
         require_once APP_PATH . '/models/EvaluacionModel.php';
+        require_once APP_PATH . '/models/CicloModel.php';
 
         $this->dependenciaModel = new DependenciaModel();
         $this->programaModel = new ProgramaModel();
         $this->evaluacionModel = new EvaluacionModel();
+        $this->cicloModel = new CicloModel();
 
         $this->id_dependencia = $this->dependenciaModel->getIdDependenciaPorUsuario($_SESSION['id_usuario']);
     }
@@ -81,7 +84,8 @@ class DependenciaController extends Controller {
     }
 
     public function crearPrograma() {
-        $this->view('dependencia/crear_programa');
+        $ciclos = $this->cicloModel->obtenerCiclosActuales();
+        $this->view('dependencia/crear_programa', ['ciclos' => $ciclos]);
     }
 
     public function guardarPrograma() {
@@ -91,7 +95,22 @@ class DependenciaController extends Controller {
             if (!isset($_POST['descripcion'])) $_POST['descripcion'] = '';
             if (!isset($_POST['perfiles_requeridos'])) $_POST['perfiles_requeridos'] = '';
             
-            $this->programaModel->crearPrograma($_POST);
+            $horarios = [];
+            if (isset($_POST['horarios_dias']) && is_array($_POST['horarios_dias'])) {
+                foreach ($_POST['horarios_dias'] as $index => $dia) {
+                    if (!empty($dia) && !empty($_POST['horarios_inicios'][$index]) && !empty($_POST['horarios_fines'][$index])) {
+                        $horarios[] = [
+                            'dia' => $dia,
+                            'inicio' => $_POST['horarios_inicios'][$index],
+                            'fin' => $_POST['horarios_fines'][$index]
+                        ];
+                    }
+                }
+            }
+
+            $ciclosSeleccionados = $_POST['ciclos'] ?? [];
+
+            $this->programaModel->crearPrograma($_POST, $horarios, $ciclosSeleccionados);
             $this->redirect('dependencia/misProgramas?success=creado');
         }
     }
@@ -100,7 +119,16 @@ class DependenciaController extends Controller {
         if (isset($_GET['id'])) {
             $programa = $this->programaModel->obtenerProgramaPorId((int)$_GET['id']);
             if ($programa && $programa['id_dependencia'] == $this->id_dependencia) {
-                $this->view('dependencia/editar_programa', ['programa' => $programa]);
+                $ciclos = $this->cicloModel->obtenerTodosLosCiclos();
+                $ciclosPrograma = $this->programaModel->obtenerCiclosPorPrograma($programa['id_programa']);
+                $horariosPrograma = $this->programaModel->obtenerHorariosPorPrograma($programa['id_programa']);
+                
+                $this->view('dependencia/editar_programa', [
+                    'programa' => $programa,
+                    'ciclos' => $ciclos,
+                    'ciclosPrograma' => $ciclosPrograma,
+                    'horariosPrograma' => $horariosPrograma
+                ]);
                 return;
             }
         }
@@ -112,7 +140,22 @@ class DependenciaController extends Controller {
             $id = (int)$_POST['id_programa'];
             $programa = $this->programaModel->obtenerProgramaPorId($id);
             if ($programa && $programa['id_dependencia'] == $this->id_dependencia) {
-                $this->programaModel->actualizarPrograma($id, $_POST);
+                $horarios = [];
+                if (isset($_POST['horarios_dias']) && is_array($_POST['horarios_dias'])) {
+                    foreach ($_POST['horarios_dias'] as $index => $dia) {
+                        if (!empty($dia) && !empty($_POST['horarios_inicios'][$index]) && !empty($_POST['horarios_fines'][$index])) {
+                            $horarios[] = [
+                                'dia' => $dia,
+                                'inicio' => $_POST['horarios_inicios'][$index],
+                                'fin' => $_POST['horarios_fines'][$index]
+                            ];
+                        }
+                    }
+                }
+                
+                $ciclosSeleccionados = $_POST['ciclos'] ?? [];
+                
+                $this->programaModel->actualizarPrograma($id, $_POST, $horarios, $ciclosSeleccionados);
                 $this->redirect('dependencia/misProgramas?success=actualizado');
                 return;
             }
@@ -122,9 +165,8 @@ class DependenciaController extends Controller {
 
     public function eliminarPrograma() {
         if (isset($_GET['id'])) {
-            $mes = (int)date('n');
-            if ($mes !== 8 && $mes !== 12) {
-                $this->redirect('dependencia/misProgramas?error=mes_invalido');
+            if ($this->cicloModel->hayCicloActivo()) {
+                $this->redirect('dependencia/misProgramas?error=ciclo_activo');
                 return;
             }
 

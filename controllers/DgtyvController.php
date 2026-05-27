@@ -4,6 +4,7 @@ class DgtyvController extends Controller {
     private ProgramaModel $programaModel;
     private DocumentoModel $documentoModel;
     private AlumnoModel $alumnoModel;
+    private CicloModel $cicloModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -18,6 +19,9 @@ class DgtyvController extends Controller {
         $this->programaModel = new ProgramaModel();
         $this->documentoModel = new DocumentoModel();
         $this->alumnoModel = new AlumnoModel();
+
+        require_once APP_PATH . '/models/CicloModel.php';
+        $this->cicloModel = new CicloModel();
     }
 
     public function index(): void {
@@ -284,12 +288,12 @@ class DgtyvController extends Controller {
             'descripcion' => $_POST['descripcion'] ?? '',
             'perfiles_requeridos' => $_POST['perfiles_requeridos'] ?? '',
             'cupos_totales' => $_POST['cupos_totales'] ?? '',
-            'horario' => $_POST['horario'] ?? '',
             'ubicacion' => $_POST['ubicacion'] ?? '',
             'responsable_nombre' => $_POST['responsable_nombre'] ?? '',
             'responsable_contacto' => $_POST['responsable_contacto'] ?? ''
         ];
 
+        // Se usa la nueva firma (aunque sea DGTyV, por ahora pasamos vacíos o los horarios si se mandan)
         if ($this->programaModel->crearPrograma($datos)) {
             $_SESSION['success'] = 'Programa creado y aprobado exitosamente.';
             $this->redirect('dgtyv/programas');
@@ -297,5 +301,41 @@ class DgtyvController extends Controller {
             $_SESSION['error'] = 'Error al crear el programa.';
             $this->redirect('dgtyv/nuevo_programa');
         }
+    }
+
+    /**
+     * Gestión de Ciclos
+     */
+    public function ciclos(): void {
+        $ciclos = $this->cicloModel->obtenerTodosLosCiclos();
+        $this->view('dgtyv/ciclos', [
+            'titulo' => 'Gestión de Ciclos',
+            'ciclos' => $ciclos,
+            'paginaActiva' => 'ciclos'
+        ]);
+    }
+
+    public function guardar_ciclo(): void {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nombre = trim($_POST['nombre_ciclo']);
+            $inicio = trim($_POST['fecha_inicio']);
+            $fin = trim($_POST['fecha_fin']);
+
+            if (!empty($nombre) && !empty($inicio) && !empty($fin)) {
+                $this->cicloModel->crearCiclo($nombre, $inicio, $fin);
+                $_SESSION['flash_success'] = 'Ciclo registrado con éxito.';
+            } else {
+                $_SESSION['flash_error'] = 'Todos los campos son obligatorios.';
+            }
+        }
+        $this->redirect('dgtyv/ciclos');
+    }
+
+    public function eliminar_ciclo(): void {
+        if (isset($_GET['id'])) {
+            $this->cicloModel->eliminarCiclo((int)$_GET['id']);
+            $_SESSION['flash_success'] = 'Ciclo eliminado.';
+        }
+        $this->redirect('dgtyv/ciclos');
     }
 }

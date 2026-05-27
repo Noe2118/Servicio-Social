@@ -135,32 +135,59 @@ class ProgramaModel {
         return $stmt->fetchAll();
     }
 
-    public function crearPrograma(array $datos): bool {
-        $sql = "INSERT INTO programas (
-                    id_dependencia, folio_programa, nombre_programa, modalidad, 
-                    descripcion, perfiles_requeridos, cupos_totales, cupos_ocupados, 
-                    horario, ubicacion, responsable_nombre, responsable_contacto, 
-                    estado_aprobacion, fecha_envio
-                ) VALUES (
-                    :id_dependencia, :folio, :nombre, :modalidad, 
-                    :descripcion, :perfiles, :cupos, 0, 
-                    :horario, :ubicacion, :responsable_nombre, :responsable_contacto, 
-                    'Aprobado', CURRENT_DATE
-                )";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            'id_dependencia' => $datos['id_dependencia'],
-            'folio' => $datos['folio_programa'],
-            'nombre' => $datos['nombre_programa'],
-            'modalidad' => $datos['modalidad'],
-            'descripcion' => $datos['descripcion'],
-            'perfiles' => $datos['perfiles_requeridos'],
-            'cupos' => $datos['cupos_totales'],
-            'horario' => $datos['horario'],
-            'ubicacion' => $datos['ubicacion'],
-            'responsable_nombre' => $datos['responsable_nombre'],
-            'responsable_contacto' => $datos['responsable_contacto']
-        ]);
+    public function crearPrograma(array $datos, array $horarios = [], array $ciclos = []): int|bool {
+        try {
+            $this->db->beginTransaction();
+
+            $sql = "INSERT INTO programas (
+                        id_dependencia, folio_programa, nombre_programa, modalidad, 
+                        descripcion, perfiles_requeridos, cupos_totales, cupos_ocupados, 
+                        ubicacion, responsable_nombre, responsable_contacto, 
+                        estado_aprobacion, fecha_envio
+                    ) VALUES (
+                        :id_dependencia, :folio, :nombre, :modalidad, 
+                        :descripcion, :perfiles, :cupos, 0, 
+                        :ubicacion, :responsable_nombre, :responsable_contacto, 
+                        'Aprobado', CURRENT_DATE
+                    )";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'id_dependencia' => $datos['id_dependencia'],
+                'folio' => $datos['folio_programa'],
+                'nombre' => $datos['nombre_programa'],
+                'modalidad' => $datos['modalidad'],
+                'descripcion' => $datos['descripcion'],
+                'perfiles' => $datos['perfiles_requeridos'],
+                'cupos' => $datos['cupos_totales'],
+                'ubicacion' => $datos['ubicacion'],
+                'responsable_nombre' => $datos['responsable_nombre'],
+                'responsable_contacto' => $datos['responsable_contacto']
+            ]);
+
+            $id_programa = $this->db->lastInsertId();
+
+            if (!empty($horarios)) {
+                $sqlHorario = "INSERT INTO horarios_programas (id_programa, dia_semana, hora_inicio, hora_fin) VALUES (?, ?, ?, ?)";
+                $stmtHorario = $this->db->prepare($sqlHorario);
+                foreach ($horarios as $h) {
+                    $stmtHorario->execute([$id_programa, $h['dia'], $h['inicio'], $h['fin']]);
+                }
+            }
+
+            if (!empty($ciclos)) {
+                $sqlCiclo = "INSERT INTO ciclos_programas (id_programa, id_ciclo) VALUES (?, ?)";
+                $stmtCiclo = $this->db->prepare($sqlCiclo);
+                foreach ($ciclos as $id_ciclo) {
+                    $stmtCiclo->execute([$id_programa, $id_ciclo]);
+                }
+            }
+
+            $this->db->commit();
+            return (int) $id_programa;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
     }
 
     public function obtenerProgramasRecientes(int $limit = 5): array {
@@ -196,26 +223,68 @@ class ProgramaModel {
         return $stmt->execute([$id_programa]);
     }
     
-    public function actualizarPrograma(int $id_programa, array $datos): bool {
-        $sql = "UPDATE programas SET 
-                nombre_programa = :nombre, modalidad = :modalidad, 
-                descripcion = :descripcion, perfiles_requeridos = :perfiles, 
-                cupos_totales = :cupos, horario = :horario, 
-                ubicacion = :ubicacion, responsable_nombre = :responsable_nombre, 
-                responsable_contacto = :responsable_contacto 
-                WHERE id_programa = :id";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            'id' => $id_programa,
-            'nombre' => $datos['nombre_programa'],
-            'modalidad' => $datos['modalidad'],
-            'descripcion' => $datos['descripcion'],
-            'perfiles' => $datos['perfiles_requeridos'],
-            'cupos' => $datos['cupos_totales'],
-            'horario' => $datos['horario'],
-            'ubicacion' => $datos['ubicacion'],
-            'responsable_nombre' => $datos['responsable_nombre'],
-            'responsable_contacto' => $datos['responsable_contacto']
-        ]);
+    public function actualizarPrograma(int $id_programa, array $datos, array $horarios = [], array $ciclos = []): bool {
+        try {
+            $this->db->beginTransaction();
+
+            $sql = "UPDATE programas SET 
+                    nombre_programa = :nombre, modalidad = :modalidad, 
+                    descripcion = :descripcion, perfiles_requeridos = :perfiles, 
+                    cupos_totales = :cupos, 
+                    ubicacion = :ubicacion, responsable_nombre = :responsable_nombre, 
+                    responsable_contacto = :responsable_contacto 
+                    WHERE id_programa = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'id' => $id_programa,
+                'nombre' => $datos['nombre_programa'],
+                'modalidad' => $datos['modalidad'],
+                'descripcion' => $datos['descripcion'],
+                'perfiles' => $datos['perfiles_requeridos'],
+                'cupos' => $datos['cupos_totales'],
+                'ubicacion' => $datos['ubicacion'],
+                'responsable_nombre' => $datos['responsable_nombre'],
+                'responsable_contacto' => $datos['responsable_contacto']
+            ]);
+
+            // Limpiar relaciones anteriores
+            $this->db->prepare("DELETE FROM horarios_programas WHERE id_programa = ?")->execute([$id_programa]);
+            $this->db->prepare("DELETE FROM ciclos_programas WHERE id_programa = ?")->execute([$id_programa]);
+
+            // Insertar nuevas
+            if (!empty($horarios)) {
+                $sqlHorario = "INSERT INTO horarios_programas (id_programa, dia_semana, hora_inicio, hora_fin) VALUES (?, ?, ?, ?)";
+                $stmtHorario = $this->db->prepare($sqlHorario);
+                foreach ($horarios as $h) {
+                    $stmtHorario->execute([$id_programa, $h['dia'], $h['inicio'], $h['fin']]);
+                }
+            }
+
+            if (!empty($ciclos)) {
+                $sqlCiclo = "INSERT INTO ciclos_programas (id_programa, id_ciclo) VALUES (?, ?)";
+                $stmtCiclo = $this->db->prepare($sqlCiclo);
+                foreach ($ciclos as $id_ciclo) {
+                    $stmtCiclo->execute([$id_programa, $id_ciclo]);
+                }
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+    public function obtenerCiclosPorPrograma(int $id_programa): array {
+        $stmt = $this->db->prepare("SELECT id_ciclo FROM ciclos_programas WHERE id_programa = ?");
+        $stmt->execute([$id_programa]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function obtenerHorariosPorPrograma(int $id_programa): array {
+        $stmt = $this->db->prepare("SELECT dia_semana, hora_inicio, hora_fin FROM horarios_programas WHERE id_programa = ?");
+        $stmt->execute([$id_programa]);
+        return $stmt->fetchAll();
     }
 }

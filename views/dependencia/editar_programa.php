@@ -47,17 +47,90 @@
                     </select>
                 </div>
                 
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">Cupos Totales Solicitados *</label>
                     <input type="number" name="cupos_totales" class="form-control" required min="<?= $programa['cupos_ocupados'] ?>" max="50" value="<?= htmlspecialchars($programa['cupos_totales']) ?>">
                     <small class="text-muted" style="font-size:0.7rem;">No puedes reducir cupos por debajo de los <?= $programa['cupos_ocupados'] ?> ya ocupados.</small>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Horario *</label>
-                    <input type="text" name="horario" class="form-control" required value="<?= htmlspecialchars($programa['horario']) ?>">
+
+                <div class="col-12 mt-4">
+                    <label class="form-label fw-bold" style="color:var(--navy);"><i class="fa-solid fa-calendar-days me-2"></i> Ciclos Activos</label>
+                    <div class="p-3 border rounded" style="background:#f8fafc;">
+                        <?php if (!empty($ciclos)): ?>
+                            <div class="row g-2">
+                                <?php foreach ($ciclos as $c): ?>
+                                    <?php $isChecked = in_array($c['id_ciclo'], $ciclosPrograma) ? 'checked' : ''; ?>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ciclos[]" value="<?= $c['id_ciclo'] ?>" id="ciclo_<?= $c['id_ciclo'] ?>" <?= $isChecked ?>>
+                                            <label class="form-check-label" for="ciclo_<?= $c['id_ciclo'] ?>">
+                                                <?= htmlspecialchars($c['nombre_ciclo']) ?> 
+                                                <small class="text-muted d-block">(<?= date('d/m/Y', strtotime($c['fecha_inicio'])) ?> - <?= date('d/m/Y', strtotime($c['fecha_fin'])) ?>)</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-danger mb-0 small">No hay ciclos activos registrados por DGTyV.</p>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
-                <div class="col-12">
+                <div class="col-12 mt-4">
+                    <label class="form-label fw-bold" style="color:var(--navy);"><i class="fa-regular fa-clock me-2"></i> Horario Semanal</label>
+                    <div class="p-3 border rounded" style="background:#f8fafc;">
+                        <table class="table table-sm table-borderless mb-2" id="horariosTable">
+                            <thead>
+                                <tr>
+                                    <th>Día</th>
+                                    <th>Hora Inicio</th>
+                                    <th>Hora Fin</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($horariosPrograma)): ?>
+                                    <?php foreach ($horariosPrograma as $h): ?>
+                                        <tr>
+                                            <td>
+                                                <select name="horarios_dias[]" class="form-select form-select-sm" required>
+                                                    <?php $dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']; ?>
+                                                    <?php foreach ($dias as $d): ?>
+                                                        <option value="<?= $d ?>" <?= $h['dia_semana'] == $d ? 'selected' : '' ?>><?= $d ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </td>
+                                            <td><input type="time" name="horarios_inicios[]" class="form-control form-control-sm" required value="<?= $h['hora_inicio'] ?>"></td>
+                                            <td><input type="time" name="horarios_fines[]" class="form-control form-control-sm" required value="<?= $h['hora_fin'] ?>"></td>
+                                            <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fa-solid fa-xmark"></i></button></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td>
+                                            <select name="horarios_dias[]" class="form-select form-select-sm" required>
+                                                <option value="Lunes">Lunes</option>
+                                                <option value="Martes">Martes</option>
+                                                <option value="Miércoles">Miércoles</option>
+                                                <option value="Jueves">Jueves</option>
+                                                <option value="Viernes">Viernes</option>
+                                                <option value="Sábado">Sábado</option>
+                                                <option value="Domingo">Domingo</option>
+                                            </select>
+                                        </td>
+                                        <td><input type="time" name="horarios_inicios[]" class="form-control form-control-sm" required></td>
+                                        <td><input type="time" name="horarios_fines[]" class="form-control form-control-sm" required></td>
+                                        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fa-solid fa-xmark"></i></button></td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarHorario()"><i class="fa-solid fa-plus"></i> Agregar otro día</button>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-4">
                     <label class="form-label">Ubicación *</label>
                     <input type="text" name="ubicacion" class="form-control" required value="<?= htmlspecialchars($programa['ubicacion']) ?>">
                 </div>
@@ -89,5 +162,28 @@
     </div>
 </div>
 
+<script>
+function agregarHorario() {
+    const tbody = document.querySelector('#horariosTable tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>
+            <select name="horarios_dias[]" class="form-select form-select-sm" required>
+                <option value="Lunes">Lunes</option>
+                <option value="Martes">Martes</option>
+                <option value="Miércoles">Miércoles</option>
+                <option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+                <option value="Sábado">Sábado</option>
+                <option value="Domingo">Domingo</option>
+            </select>
+        </td>
+        <td><input type="time" name="horarios_inicios[]" class="form-control form-control-sm" required></td>
+        <td><input type="time" name="horarios_fines[]" class="form-control form-control-sm" required></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fa-solid fa-xmark"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+}
+</script>
 </body>
 </html>
