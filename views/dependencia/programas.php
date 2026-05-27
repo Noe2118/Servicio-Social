@@ -194,8 +194,21 @@
             <h1>Gestión de Cupos</h1>
             <p>Administra los programas activos y revisa la disponibilidad de cupos.</p>
         </div>
-        <button class="btn-accent"><i class="fa-solid fa-plus"></i> Proponer Nuevo Programa</button>
+        <a href="<?= BASE_URL ?>/dependencia/crearPrograma" class="btn-accent" style="text-decoration:none;"><i class="fa-solid fa-plus"></i> Proponer Nuevo Programa</a>
     </div>
+
+    <?php if(isset($_GET['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            Acción realizada con éxito.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    <?php if(isset($_GET['error']) && $_GET['error'] == 'mes_invalido'): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> Solo se permite desactivar programas en periodo inhábil (Agosto o Diciembre).
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
 
     <!-- Table Card -->
     <div class="table-card">
@@ -239,7 +252,15 @@
                                     <span class="badge-status badge-revision"><span class="badge-dot"></span> En Revisión por DGTyV</span>
                                 <?php endif; ?>
                             </td>
-                            <td><button class="actions-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button></td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="actions-btn" data-bs-toggle="dropdown"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/dependencia/editarPrograma?id=<?= $p['id_programa'] ?>"><i class="fa-solid fa-pen text-primary me-2"></i> Editar</a></li>
+                                        <li><a class="dropdown-item text-danger" href="<?= BASE_URL ?>/dependencia/eliminarPrograma?id=<?= $p['id_programa'] ?>" onclick="return confirm('¿Estás seguro de desactivar y eliminar este programa? Todos los alumnos inscritos serán desvinculados.')"><i class="fa-solid fa-trash-can me-2"></i> Desactivar</a></li>
+                                    </ul>
+                                </div>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>

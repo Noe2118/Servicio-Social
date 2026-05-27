@@ -79,4 +79,70 @@ class DependenciaController extends Controller {
             $this->redirect('dependencia/alumnos?success=1');
         }
     }
+
+    public function crearPrograma() {
+        $this->view('dependencia/crear_programa');
+    }
+
+    public function guardarPrograma() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $_POST['id_dependencia'] = $this->id_dependencia;
+            $_POST['folio_programa'] = 'PRG-' . strtoupper(substr(md5(uniqid()), 0, 6));
+            if (!isset($_POST['descripcion'])) $_POST['descripcion'] = '';
+            if (!isset($_POST['perfiles_requeridos'])) $_POST['perfiles_requeridos'] = '';
+            
+            $this->programaModel->crearPrograma($_POST);
+            $this->redirect('dependencia/misProgramas?success=creado');
+        }
+    }
+
+    public function editarPrograma() {
+        if (isset($_GET['id'])) {
+            $programa = $this->programaModel->obtenerProgramaPorId((int)$_GET['id']);
+            if ($programa && $programa['id_dependencia'] == $this->id_dependencia) {
+                $this->view('dependencia/editar_programa', ['programa' => $programa]);
+                return;
+            }
+        }
+        $this->redirect('dependencia/misProgramas');
+    }
+
+    public function actualizarPrograma() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_programa'])) {
+            $id = (int)$_POST['id_programa'];
+            $programa = $this->programaModel->obtenerProgramaPorId($id);
+            if ($programa && $programa['id_dependencia'] == $this->id_dependencia) {
+                $this->programaModel->actualizarPrograma($id, $_POST);
+                $this->redirect('dependencia/misProgramas?success=actualizado');
+                return;
+            }
+        }
+        $this->redirect('dependencia/misProgramas');
+    }
+
+    public function eliminarPrograma() {
+        if (isset($_GET['id'])) {
+            $mes = (int)date('n');
+            if ($mes !== 8 && $mes !== 12) {
+                $this->redirect('dependencia/misProgramas?error=mes_invalido');
+                return;
+            }
+
+            $id = (int)$_GET['id'];
+            $programa = $this->programaModel->obtenerProgramaPorId($id);
+            
+            if ($programa && $programa['id_dependencia'] == $this->id_dependencia) {
+                // Notificar y desvincular alumnos
+                $alumnos = $this->programaModel->obtenerAlumnosPorPrograma($id);
+                $mensaje = "El programa '{$programa['nombre_programa']}' al que estabas inscrito ha sido cancelado por la dependencia. Por favor, inscríbete a un nuevo programa.";
+                $this->programaModel->notificarYDesvincularAlumnos($alumnos, $mensaje);
+                
+                // Eliminar programa
+                $this->programaModel->eliminarPrograma($id);
+                $this->redirect('dependencia/misProgramas?success=eliminado');
+                return;
+            }
+        }
+        $this->redirect('dependencia/misProgramas');
+    }
 }

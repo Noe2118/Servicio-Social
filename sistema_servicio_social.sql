@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 25, 2026 at 09:10 PM
+-- Generation Time: May 27, 2026 at 07:22 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -36,8 +36,16 @@ CREATE TABLE `alumnos` (
   `periodo_actual` varchar(50) DEFAULT 'Ago-Dic 2023',
   `porcentaje_creditos` decimal(5,2) NOT NULL,
   `horas_completadas` int(11) DEFAULT 0,
-  `estado_servicio` enum('Sin Iniciar','En curso','Liberado','Interrumpido') DEFAULT 'Sin Iniciar'
+  `estado_servicio` enum('Sin Iniciar','En curso','Liberado','Interrumpido') DEFAULT 'Sin Iniciar',
+  `notificacion` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `alumnos`
+--
+
+INSERT INTO `alumnos` (`id_alumno`, `id_usuario`, `no_control`, `nombre_completo`, `carrera`, `periodo_actual`, `porcentaje_creditos`, `horas_completadas`, `estado_servicio`) VALUES
+(1, 3, '22560001', 'Juan Carlos Pérez López', 'Ing. en Sistemas Computacionales', 'Ene-Jun 2026', 75.50, 500, 'En curso');
 
 -- --------------------------------------------------------
 
@@ -53,6 +61,13 @@ CREATE TABLE `asignaciones` (
   `estado_asignacion` enum('Pendiente','Activo','Concluido','Baja') DEFAULT 'Pendiente'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `asignaciones`
+--
+
+INSERT INTO `asignaciones` (`id_asignacion`, `id_alumno`, `id_programa`, `fecha_asignacion`, `estado_asignacion`) VALUES
+(1, 1, 1, '2025-08-15', 'Activo');
+
 -- --------------------------------------------------------
 
 --
@@ -65,6 +80,13 @@ CREATE TABLE `dependencias` (
   `nombre_organizacion` varchar(150) NOT NULL,
   `direccion` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `dependencias`
+--
+
+INSERT INTO `dependencias` (`id_dependencia`, `id_usuario`, `nombre_organizacion`, `direccion`) VALUES
+(1, 1, 'CONAFOR - Comisión Nacional Forestal', 'Av. Insurgentes Sur 123, Chetumal, Q. Roo');
 
 -- --------------------------------------------------------
 
@@ -82,6 +104,13 @@ CREATE TABLE `documentos` (
   `estado_validacion` enum('Falta Subir','Nuevo','En Revisión','Corregido','Aprobado','Rechazado') DEFAULT 'Nuevo',
   `comentarios_dgtyv` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `documentos`
+--
+
+INSERT INTO `documentos` (`id_documento`, `id_alumno`, `tipo_documento`, `nombre_archivo_original`, `ruta_servidor`, `fecha_subida`, `estado_validacion`, `comentarios_dgtyv`) VALUES
+(1, 1, 'Carta de Aceptación', 'UNIDAD 3_Programacion. Equipo Colli, Medina, Puc, Tun.pdf', '/uploads/documentos/1779817539_3791_UNIDAD_3_Programacion._Equipo_Colli__Medina__Puc__Tun.pdf', '2026-05-26 12:45:39', 'Aprobado', 'Todo bien');
 
 -- --------------------------------------------------------
 
@@ -123,6 +152,15 @@ CREATE TABLE `programas` (
   `fecha_envio` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `programas`
+--
+
+INSERT INTO `programas` (`id_programa`, `id_dependencia`, `folio_programa`, `nombre_programa`, `modalidad`, `descripcion`, `perfiles_requeridos`, `cupos_totales`, `cupos_ocupados`, `horario`, `ubicacion`, `responsable_nombre`, `responsable_contacto`, `estado_aprobacion`, `fecha_envio`) VALUES
+(1, 1, 'SS-2026-001', 'Reforestación y Cuidado Ambiental', 'Presencial', 'Apoyo en actividades de reforestación en zonas de selva baja en Othón P. Blanco.', 'Biología, Arquitectura, Ingeniería Civil', 10, 0, NULL, NULL, 'Ing. Carlos Mendoza', 'cmendoza@conafor.gob.mx', 'Aprobado', '2026-05-25'),
+(2, 1, 'SS-2026-002', 'Desarrollo de Sistema de Inventario', 'Virtual', 'Creación de software web para control de inventario de flora rescatada.', 'Ingeniería en Sistemas Computacionales, Informática', 3, 0, NULL, NULL, 'Lic. Ana Torres', 'atorres@conafor.gob.mx', 'Aprobado', '2026-05-25'),
+(3, 1, 'SS-2026-003', 'Campaña de Concientización Digital', 'Híbrida', 'Diseño multimedia para redes sociales fomentando la prevención de incendios.', 'Lic. en Administración, Arquitectura', 2, 0, NULL, NULL, 'Mtro. Roberto Ruiz', 'rruiz@conafor.gob.mx', 'Aprobado', '2026-05-25');
+
 -- --------------------------------------------------------
 
 --
@@ -136,6 +174,15 @@ CREATE TABLE `usuarios` (
   `rol` enum('Alumno','DGTyV','Dependencia') NOT NULL,
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `usuarios`
+--
+
+INSERT INTO `usuarios` (`id_usuario`, `correo`, `password_hash`, `rol`, `fecha_creacion`) VALUES
+(1, 'contacto@conafor.gob.mx', '$2y$10$eYbjZ7HywQhM17XjczG57eqqk6UZdvFSshJND20PMRAhQAR6ad5s.', 'Dependencia', '2026-05-25 19:42:21'),
+(2, 'admin@itch.edu.mx', '$2y$10$58Vc/gWyrxD0GD/.MErrbuxQMduhsnMypeyhKjq27F.v6GbnDLkA6', 'DGTyV', '2026-05-25 19:42:36'),
+(3, 'alumno@itch.edu.mx', '$2y$10$/Brb8VFLzdwrSHnKkp.hC.NcbBqoMt5BtEsiZ5eEF95o/SIKvy8le', 'Alumno', '2026-05-26 17:26:40');
 
 --
 -- Indexes for dumped tables
@@ -204,25 +251,25 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT for table `alumnos`
 --
 ALTER TABLE `alumnos`
-  MODIFY `id_alumno` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_alumno` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `asignaciones`
 --
 ALTER TABLE `asignaciones`
-  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `dependencias`
 --
 ALTER TABLE `dependencias`
-  MODIFY `id_dependencia` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_dependencia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `documentos`
 --
 ALTER TABLE `documentos`
-  MODIFY `id_documento` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_documento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `evaluaciones`
@@ -234,13 +281,13 @@ ALTER TABLE `evaluaciones`
 -- AUTO_INCREMENT for table `programas`
 --
 ALTER TABLE `programas`
-  MODIFY `id_programa` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_programa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Constraints for dumped tables

@@ -175,4 +175,47 @@ class ProgramaModel {
         $stmt->execute();
         return $stmt->fetchAll();
     }
+
+    public function obtenerAlumnosPorPrograma(int $id_programa): array {
+        $stmt = $this->db->prepare("SELECT id_alumno FROM asignaciones WHERE id_programa = ? AND estado_asignacion = 'Activo'");
+        $stmt->execute([$id_programa]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function notificarYDesvincularAlumnos(array $ids_alumnos, string $mensaje): bool {
+        if (empty($ids_alumnos)) return true;
+        $in = str_repeat('?,', count($ids_alumnos) - 1) . '?';
+        $sql = "UPDATE alumnos SET estado_servicio = 'Sin Iniciar', notificacion = ? WHERE id_alumno IN ($in)";
+        $params = array_merge([$mensaje], $ids_alumnos);
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
+    }
+
+    public function eliminarPrograma(int $id_programa): bool {
+        $stmt = $this->db->prepare("DELETE FROM programas WHERE id_programa = ?");
+        return $stmt->execute([$id_programa]);
+    }
+    
+    public function actualizarPrograma(int $id_programa, array $datos): bool {
+        $sql = "UPDATE programas SET 
+                nombre_programa = :nombre, modalidad = :modalidad, 
+                descripcion = :descripcion, perfiles_requeridos = :perfiles, 
+                cupos_totales = :cupos, horario = :horario, 
+                ubicacion = :ubicacion, responsable_nombre = :responsable_nombre, 
+                responsable_contacto = :responsable_contacto 
+                WHERE id_programa = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'id' => $id_programa,
+            'nombre' => $datos['nombre_programa'],
+            'modalidad' => $datos['modalidad'],
+            'descripcion' => $datos['descripcion'],
+            'perfiles' => $datos['perfiles_requeridos'],
+            'cupos' => $datos['cupos_totales'],
+            'horario' => $datos['horario'],
+            'ubicacion' => $datos['ubicacion'],
+            'responsable_nombre' => $datos['responsable_nombre'],
+            'responsable_contacto' => $datos['responsable_contacto']
+        ]);
+    }
 }
