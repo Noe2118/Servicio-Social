@@ -203,6 +203,16 @@ class ProgramaModel {
         return $stmt->fetchAll();
     }
 
+    public function obtenerTodosLosProgramas(): array {
+        $stmt = $this->db->query(
+            "SELECT p.*, d.nombre_organizacion 
+             FROM programas p 
+             JOIN dependencias d ON p.id_dependencia = d.id_dependencia 
+             ORDER BY p.estado_aprobacion ASC, p.fecha_envio DESC"
+        );
+        return $stmt->fetchAll();
+    }
+
     public function obtenerAlumnosPorPrograma(int $id_programa): array {
         $stmt = $this->db->prepare("SELECT id_alumno FROM asignaciones WHERE id_programa = ? AND estado_asignacion = 'Activo'");
         $stmt->execute([$id_programa]);

@@ -309,6 +309,28 @@ class DgtyvController extends Controller {
         $this->redirect('dgtyv/liberacion');
     }
 
+    public function catalogo_programas(): void {
+        $programas = $this->programaModel->obtenerTodosLosProgramas();
+        
+        foreach ($programas as &$prog) {
+            $horarios = $this->programaModel->obtenerHorariosPorPrograma($prog['id_programa']);
+            $strs = [];
+            foreach ($horarios as $h) {
+                $inicio = date('H:i', strtotime($h['hora_inicio']));
+                $fin = date('H:i', strtotime($h['hora_fin']));
+                $strs[] = $h['dia_semana'] . ' (' . $inicio . ' - ' . $fin . ')';
+            }
+            $prog['horarios_formateados'] = empty($strs) ? 'No definido' : implode(', ', $strs);
+        }
+        unset($prog);
+
+        $this->view('dgtyv/catalogo_programas', [
+            'titulo' => 'Catálogo de Programas',
+            'programas' => $programas,
+            'paginaActiva' => 'catalogo_programas'
+        ]);
+    }
+
     /**
      * Módulo para crear un programa nuevo (Admin DGTyV)
      */
@@ -338,13 +360,25 @@ class DgtyvController extends Controller {
             'descripcion' => $_POST['descripcion'] ?? '',
             'perfiles_requeridos' => $_POST['perfiles_requeridos'] ?? '',
             'cupos_totales' => $_POST['cupos_totales'] ?? '',
+            'dia_semana' => $_POST['dia_semana'] ?? '',
+            'hora_inicio' => $_POST['hora_inicio'] ?? '',
+            'hora_fin' => $_POST['hora_fin'] ?? '',
             'ubicacion' => $_POST['ubicacion'] ?? '',
             'responsable_nombre' => $_POST['responsable_nombre'] ?? '',
             'responsable_contacto' => $_POST['responsable_contacto'] ?? ''
         ];
 
+        $horarios = [];
+        if (!empty($_POST['dia_semana']) && !empty($_POST['hora_inicio']) && !empty($_POST['hora_fin'])) {
+            $horarios[] = [
+                'dia' => $_POST['dia_semana'],
+                'inicio' => $_POST['hora_inicio'],
+                'fin' => $_POST['hora_fin']
+            ];
+        }
+
         // Se usa la nueva firma (aunque sea DGTyV, por ahora pasamos vacíos o los horarios si se mandan)
-        if ($this->programaModel->crearPrograma($datos)) {
+        if ($this->programaModel->crearPrograma($datos, $horarios)) {
             $_SESSION['flash_success'] = 'Programa creado y aprobado exitosamente.';
             $this->redirect('dgtyv/programas');
         } else {

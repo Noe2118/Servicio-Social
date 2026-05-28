@@ -58,8 +58,27 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold" style="font-size:0.9rem;">Horario <span class="text-danger">*</span></label>
-                            <input type="text" name="horario" class="form-control" placeholder="Ej. L-V 8:00 - 14:00" required>
+                            <label class="form-label fw-semibold" style="font-size:0.9rem;">Día de la Semana <span class="text-danger">*</span></label>
+                            <select name="dia_semana" class="form-select" required>
+                                <option value="Lunes a Viernes">Lunes a Viernes</option>
+                                <option value="Lunes a Sabado">Lunes a Sábado</option>
+                                <option value="Fines de Semana">Fines de Semana</option>
+                                <option value="Lunes">Lunes</option>
+                                <option value="Martes">Martes</option>
+                                <option value="Miercoles">Miércoles</option>
+                                <option value="Jueves">Jueves</option>
+                                <option value="Viernes">Viernes</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold" style="font-size:0.9rem;">Hora Inicio <span class="text-danger">*</span></label>
+                            <input type="time" name="hora_inicio" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold" style="font-size:0.9rem;">Hora Fin <span class="text-danger">*</span></label>
+                            <input type="time" name="hora_fin" class="form-control" required>
                         </div>
                     </div>
 

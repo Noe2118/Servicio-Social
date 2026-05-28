@@ -76,7 +76,7 @@ http://localhost/SistemaServicioSocial/setup/seed_alumno
 
 ### 3. Seeder de Administrador y Datos Completos (`seed_admin`)
 
-**URL:**
+**URL:**    
 ```
 http://localhost/SistemaServicioSocial/setup/seed_admin
 ```

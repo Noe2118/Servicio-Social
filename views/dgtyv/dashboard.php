@@ -1,8 +1,15 @@
 <?php require APP_PATH . '/views/layouts/header_admin.php'; ?>
 
 <!-- Page Title -->
-<h1 class="page-title">Resumen Operativo</h1>
-<p class="page-subtitle">Bienvenido, Jefe del DGTyV. Aquí tienes un panorama general de las actividades pendientes.</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">Resumen Operativo</h1>
+        <p class="page-subtitle mb-0">Bienvenido, Jefe del DGTyV. Aquí tienes un panorama general de las actividades pendientes.</p>
+    </div>
+    <a href="<?= BASE_URL ?>/dgtyv/catalogo_programas" class="btn btn-outline-primary">
+        <i class="bi bi-collection me-1"></i> Catálogo de Programas
+    </a>
+</div>
 
 <!-- KPI Cards -->
 <div class="row g-4 mb-4">

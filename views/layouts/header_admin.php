@@ -424,6 +424,9 @@
         <a href="<?= BASE_URL ?>/dgtyv/programas" class="nav-link <?= ($paginaActiva ?? '') === 'programas' ? 'active' : '' ?>">
             <i class="bi bi-clipboard-check"></i> Aprobar Programas
         </a>
+        <a href="<?= BASE_URL ?>/dgtyv/catalogo_programas" class="nav-link <?= ($paginaActiva ?? '') === 'catalogo_programas' ? 'active' : '' ?>">
+            <i class="bi bi-collection"></i> Catálogo de Programas
+        </a>
         <a href="<?= BASE_URL ?>/dgtyv/expedientes" class="nav-link <?= ($paginaActiva ?? '') === 'expedientes' ? 'active' : '' ?>">
             <i class="bi bi-folder2-open"></i> Revisión de Expedientes
         </a>
