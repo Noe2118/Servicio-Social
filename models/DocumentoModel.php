@@ -75,9 +75,9 @@ class DocumentoModel {
      */
     public function obtenerEstadoDocumentosIniciales(int $idAlumno): array {
         $documentosRequeridos = [
-            'Carta de Aceptación',
-            'Plan de Trabajo Inicial',
-            'Constancia de Créditos'
+            'Formato de Solicitud',
+            'Asignación Compromiso de Servicio Social',
+            'Créditos Complementarios'
         ];
 
         // Obtener los últimos documentos subidos por cada tipo (para manejar re-subidas)
@@ -126,7 +126,7 @@ class DocumentoModel {
 
     public function obtenerDocumentoPorIdAdmin(int $idDocumento): ?array {
         $stmt = $this->db->prepare(
-            "SELECT d.*, a.nombre_completo, a.no_control, a.creditos_completados, asig.id_programa, asig.estado_asignacion, p.nombre_programa 
+            "SELECT d.*, a.nombre_completo, a.no_control, a.porcentaje_creditos, asig.id_programa, asig.estado_asignacion, p.nombre_programa 
              FROM documentos d 
              JOIN alumnos a ON d.id_alumno = a.id_alumno 
              LEFT JOIN asignaciones asig ON a.id_alumno = asig.id_alumno AND asig.estado_asignacion IN ('Pendiente', 'Activo')

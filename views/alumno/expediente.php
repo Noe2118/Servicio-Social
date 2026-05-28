@@ -135,11 +135,23 @@
                         <form action="<?= BASE_URL ?>/alumno/subir_documento" method="POST" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Tipo de Documento</label>
+                                <?php
+                                    $tiposPermitidos = [
+                                        'Formato de Solicitud',
+                                        'Asignación Compromiso de Servicio Social',
+                                        'Créditos Complementarios'
+                                    ];
+                                    $tiposSubidos = array_column($documentos ?? [], 'tipo_documento');
+                                    $opcionesDisponibles = array_diff($tiposPermitidos, $tiposSubidos);
+                                ?>
                                 <select name="tipo_documento" class="form-select" required>
                                     <option value="">Selecciona el documento que vas a subir...</option>
-                                    <option value="Carta de Aceptación">Carta de Aceptación</option>
-                                    <option value="Plan de Trabajo Inicial">Plan de Trabajo Inicial</option>
-                                    <option value="Constancia de Créditos">Constancia de Créditos</option>
+                                    <?php foreach ($opcionesDisponibles as $tipo): ?>
+                                        <option value="<?= htmlspecialchars($tipo) ?>"><?= htmlspecialchars($tipo) ?></option>
+                                    <?php endforeach; ?>
+                                    <?php if (empty($opcionesDisponibles)): ?>
+                                        <option value="" disabled>Ya has subido todos los documentos requeridos</option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                             <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">

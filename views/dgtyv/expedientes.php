@@ -140,7 +140,7 @@
                             <strong>Programa Solicitado:</strong> <?= htmlspecialchars($documentoSeleccionado['nombre_programa'] ?? 'N/A') ?>
                         </p>
                         <p class="mb-3" style="font-size: 0.9rem;">
-                            <strong>Créditos Completados:</strong> <?= htmlspecialchars($documentoSeleccionado['creditos_completados'] ?? '0') ?>%
+                            <strong>Créditos Completados:</strong> <?= htmlspecialchars($documentoSeleccionado['porcentaje_creditos'] ?? '0') ?>%
                         </p>
 
                         <?php if (($documentoSeleccionado['estado_asignacion'] ?? '') === 'Pendiente'): ?>
