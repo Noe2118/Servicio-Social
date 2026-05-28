@@ -144,16 +144,33 @@
                         </p>
 
                         <?php if (($documentoSeleccionado['estado_asignacion'] ?? '') === 'Pendiente'): ?>
-                            <div class="alert alert-warning py-2 mb-2" style="font-size: 0.85rem;">
-                                El alumno está pendiente de ser aceptado en el programa. Revisa que sus documentos iniciales sean correctos antes de aceptarlo.
-                            </div>
-                            <form method="POST" action="<?= BASE_URL ?>/dgtyv/aceptar_alumno">
-                                <input type="hidden" name="id_alumno" value="<?= (int)($documentoSeleccionado['id_alumno'] ?? 0) ?>">
-                                <input type="hidden" name="id_programa" value="<?= (int)($documentoSeleccionado['id_programa'] ?? 0) ?>">
-                                <button type="submit" class="btn btn-primary w-100" onclick="return confirm('¿Confirmas que deseas aceptar al alumno en el programa?');">
+                            <?php
+                                $pendientesCount = 0;
+                                foreach ($documentos as $doc) {
+                                    if ($doc['id_alumno'] == $documentoSeleccionado['id_alumno'] && in_array($doc['estado_validacion'], ['Nuevo', 'Corregido'])) {
+                                        $pendientesCount++;
+                                    }
+                                }
+                            ?>
+                            <?php if ($pendientesCount > 0): ?>
+                                <div class="alert alert-warning py-2 mb-2" style="font-size: 0.85rem;">
+                                    El alumno tiene <strong><?= $pendientesCount ?> documento(s)</strong> pendiente(s) de revisión. Emite una resolución para todos antes de aceptarlo.
+                                </div>
+                                <button type="button" class="btn btn-secondary w-100" disabled>
                                     <i class="bi bi-person-check-fill me-1"></i> Aceptar Alumno en el Programa
                                 </button>
-                            </form>
+                            <?php else: ?>
+                                <div class="alert alert-info py-2 mb-2" style="font-size: 0.85rem;">
+                                    Has revisado todos sus documentos enviados. Ahora puedes aceptar al alumno en el programa.
+                                </div>
+                                <form method="POST" action="<?= BASE_URL ?>/dgtyv/aceptar_alumno">
+                                    <input type="hidden" name="id_alumno" value="<?= (int)($documentoSeleccionado['id_alumno'] ?? 0) ?>">
+                                    <input type="hidden" name="id_programa" value="<?= (int)($documentoSeleccionado['id_programa'] ?? 0) ?>">
+                                    <button type="submit" class="btn btn-primary w-100" onclick="return confirm('¿Confirmas que deseas aceptar al alumno en el programa?');">
+                                        <i class="bi bi-person-check-fill me-1"></i> Aceptar Alumno en el Programa
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         <?php elseif (($documentoSeleccionado['estado_asignacion'] ?? '') === 'Activo'): ?>
                             <div class="alert alert-success py-2 mb-2" style="font-size: 0.85rem;">
                                 El alumno ya está ACTIVO en este programa.
