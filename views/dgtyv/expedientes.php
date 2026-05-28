@@ -35,7 +35,7 @@
                     <?php foreach ($documentos as $doc): ?>
                         <?php
                             $isSelected = !empty($documentoSeleccionado) && ($documentoSeleccionado['id_documento'] ?? null) == ($doc['id_documento'] ?? null);
-                            $esCoreegido = strtolower($doc['estado_revision'] ?? '') === 'corregido';
+                            $estadoValidacion = $doc['estado_validacion'] ?? 'Nuevo';
                         ?>
                         <a href="<?= BASE_URL ?>/dgtyv/expedientes?id=<?= (int)($doc['id_documento'] ?? 0) ?>"
                            class="review-item d-block text-decoration-none <?= $isSelected ? 'active' : '' ?>">
@@ -46,8 +46,10 @@
                                     </span>
                                     <small class="text-muted">No. Control: <?= htmlspecialchars($doc['no_control'] ?? '') ?></small>
                                 </div>
-                                <?php if ($esCoreegido): ?>
-                                    <span class="badge" style="background:#dcfce7; color:#166534; font-size:0.7rem; font-weight:600;">CORREGIDO</span>
+                                <?php if ($estadoValidacion === 'Corregido'): ?>
+                                    <span class="badge" style="background:#fef08a; color:#854d0e; font-size:0.7rem; font-weight:600;">CORREGIDO</span>
+                                <?php elseif ($estadoValidacion === 'Aprobado'): ?>
+                                    <span class="badge" style="background:#dcfce7; color:#166534; font-size:0.7rem; font-weight:600;">APROBADO</span>
                                 <?php else: ?>
                                     <span class="badge" style="background:#dbeafe; color:#1e40af; font-size:0.7rem; font-weight:600;">NUEVO</span>
                                 <?php endif; ?>
@@ -161,7 +163,7 @@
                                 </button>
                             <?php else: ?>
                                 <div class="alert alert-info py-2 mb-2" style="font-size: 0.85rem;">
-                                    Has revisado todos sus documentos enviados. Ahora puedes aceptar al alumno en el programa.
+                                    Todos los documentos del alumno han sido revisados. Ya puedes aceptarlo en el programa.
                                 </div>
                                 <form method="POST" action="<?= BASE_URL ?>/dgtyv/aceptar_alumno">
                                     <input type="hidden" name="id_alumno" value="<?= (int)($documentoSeleccionado['id_alumno'] ?? 0) ?>">

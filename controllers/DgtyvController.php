@@ -206,8 +206,6 @@ class DgtyvController extends Controller {
         if ($id > 0) {
             $this->documentoModel->actualizarEstadoConComentarios($id, 'Aprobado', $comentarios);
             $_SESSION['flash_success'] = 'Documento aprobado exitosamente.';
-            $this->redirect('dgtyv/expedientes?id=' . $id);
-            return;
         }
         $this->redirect('dgtyv/expedientes');
     }
@@ -225,8 +223,6 @@ class DgtyvController extends Controller {
         if ($id > 0) {
             $this->documentoModel->actualizarEstadoConComentarios($id, 'Rechazado', $comentarios);
             $_SESSION['flash_error'] = 'Documento rechazado.';
-            $this->redirect('dgtyv/expedientes?id=' . $id);
-            return;
         }
         $this->redirect('dgtyv/expedientes');
     }

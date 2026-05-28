@@ -119,6 +119,7 @@ class DocumentoModel {
              LEFT JOIN asignaciones asig ON a.id_alumno = asig.id_alumno AND asig.estado_asignacion IN ('Pendiente', 'Activo')
              LEFT JOIN programas p ON asig.id_programa = p.id_programa
              WHERE d.estado_validacion IN ('Nuevo', 'Corregido') 
+             OR (asig.estado_asignacion = 'Pendiente' AND d.estado_validacion = 'Aprobado')
              ORDER BY d.fecha_subida DESC"
         );
         return $stmt->fetchAll();
