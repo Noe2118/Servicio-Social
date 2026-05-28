@@ -344,4 +344,124 @@ class AlumnoController extends Controller {
 
         $this->redirect('alumno/expediente');
     }
+
+    /**
+     * Módulo de Reportes Bimestrales
+     */
+    public function bimestrales(): void {
+        if (!$this->alumno) {
+            $this->redirect('alumno/dashboard');
+            return;
+        }
+
+        $idAlumno = (int) $this->alumno['id_alumno'];
+        $asignacion = $this->asignacionModel->obtenerAsignacionActiva($idAlumno);
+
+        if (!$asignacion) {
+            $_SESSION['flash_error'] = 'No tienes una asignación activa en ningún programa.';
+            $this->redirect('alumno/dashboard');
+            return;
+        }
+
+        $idPrograma = (int) $asignacion['id_programa'];
+        
+        // Obtener configuración de bimestres para el programa
+        $bimestresConfig = $this->bimestreModel->obtenerBimestresPorPrograma($idPrograma);
+        
+        // Obtener todos los documentos del alumno para saber qué subió
+        $todosDocumentos = $this->documentoModel->obtenerPorAlumno($idAlumno);
+        
+        // Analizar el estado de cada bimestre para el alumno
+        $estadoBimestres = [
+            1 => ['habilitado' => false, 'docs_subidos' => 0, 'bloqueado' => false],
+            2 => ['habilitado' => false, 'docs_subidos' => 0, 'bloqueado' => true],
+            3 => ['habilitado' => false, 'docs_subidos' => 0, 'bloqueado' => true]
+        ];
+
+        // Verificar la configuración de la dependencia
+        foreach ($bimestresConfig as $num => $config) {
+            $estadoBimestres[$num]['habilitado'] = (bool)$config['habilitado'];
+            $estadoBimestres[$num]['config'] = $config;
+        }
+
+        // Contar documentos subidos por bimestre
+        foreach ($todosDocumentos as $doc) {
+            for ($i = 1; $i <= 3; $i++) {
+                if (str_contains($doc['tipo_documento'], "Bimestral $i") || str_contains($doc['tipo_documento'], "Cualitativa $i")) {
+                    $estadoBimestres[$i]['docs_subidos']++;
+                }
+            }
+        }
+
+        // Lógica de bloqueo estricto (continuación)
+        // Bimestre 1 nunca está bloqueado por otro bimestre, solo por su 'habilitado'
+        $estadoBimestres[1]['bloqueado'] = !$estadoBimestres[1]['habilitado'];
+        
+        // Bimestre 2: bloqueado si Bimestre 1 no tiene 2 documentos, o si el 2 no está habilitado
+        if ($estadoBimestres[1]['docs_subidos'] >= 2 && $estadoBimestres[2]['habilitado']) {
+            $estadoBimestres[2]['bloqueado'] = false;
+        }
+        
+        // Bimestre 3: bloqueado si Bimestre 2 no tiene 2 documentos, o si el 3 no está habilitado
+        if ($estadoBimestres[2]['docs_subidos'] >= 2 && $estadoBimestres[3]['habilitado']) {
+            $estadoBimestres[3]['bloqueado'] = false;
+        }
+
+        $this->view('alumno/bimestrales', [
+            'alumno' => $this->alumno,
+            'asignacion' => $asignacion,
+            'estadoBimestres' => $estadoBimestres
+        ]);
+    }
+
+    public function subir_documentos_bimestre(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_FILES['reporte_pdf']) || !isset($_FILES['evaluacion_pdf'])) {
+            $this->redirect('alumno/bimestrales');
+            return;
+        }
+
+        $idAlumno = (int) $this->alumno['id_alumno'];
+        $numBimestre = (int) $_POST['numero_bimestre'];
+
+        // Manejar subida de los 2 archivos
+        $uploadDir = APP_PATH . '/public/uploads/documentos/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+        $nombresArchivos = [
+            'Reporte Bimestral ' . $numBimestre => 'reporte_pdf',
+            'Evaluación Cualitativa ' . $numBimestre => 'evaluacion_pdf'
+        ];
+
+        $errores = [];
+        $subidos = 0;
+
+        foreach ($nombresArchivos as $tipoDoc => $inputName) {
+            if ($_FILES[$inputName]['error'] === UPLOAD_ERR_OK) {
+                $tmpName = $_FILES[$inputName]['tmp_name'];
+                $originalName = $_FILES[$inputName]['name'];
+                
+                $safeName = preg_replace('/[^a-zA-Z0-9.\-_]/', '_', $originalName);
+                $newName = time() . '_' . $idAlumno . '_' . $safeName;
+                $destPath = $uploadDir . $newName;
+
+                if (move_uploaded_file($tmpName, $destPath)) {
+                    $rutaDB = '/public/uploads/documentos/' . $newName;
+                    $this->documentoModel->subirDocumento($idAlumno, $tipoDoc, $originalName, $rutaDB);
+                    $subidos++;
+                } else {
+                    $errores[] = "Error al mover el archivo de $tipoDoc.";
+                }
+            } else {
+                $errores[] = "Error al subir $tipoDoc.";
+            }
+        }
+
+        if (empty($errores)) {
+            $_SESSION['flash_success'] = "Documentos del Bimestre $numBimestre subidos correctamente.";
+        } else {
+            $_SESSION['flash_error'] = implode(" ", $errores);
+        }
+
+        $this->redirect('alumno/bimestrales');
+    }
 }
