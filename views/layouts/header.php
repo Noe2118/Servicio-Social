@@ -311,6 +311,9 @@
         <a href="<?= BASE_URL ?>/alumno/expediente" class="nav-link <?= ($paginaActiva ?? '') === 'expediente' ? 'active' : '' ?>">
             <i class="bi bi-folder2-open"></i> Mi Expediente
         </a>
+        <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/alumno/bimestrales') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/alumno/bimestrales">
+            <i class="bi bi-journal-text"></i> Reportes Bimestrales
+        </a>
     </nav>
     <div class="mt-auto p-3 border-top">
         <a href="<?= BASE_URL ?>/auth/logout" class="nav-link text-danger">

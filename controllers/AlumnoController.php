@@ -5,6 +5,7 @@ class AlumnoController extends Controller {
     private ProgramaModel $programaModel;
     private AsignacionModel $asignacionModel;
     private DocumentoModel $documentoModel;
+    private BimestreModel $bimestreModel;
     private ?array $alumno = null;
 
     public function __construct() {
@@ -23,6 +24,9 @@ class AlumnoController extends Controller {
         $this->programaModel = new ProgramaModel();
         $this->asignacionModel = new AsignacionModel();
         $this->documentoModel = new DocumentoModel();
+
+        require_once APP_PATH . '/models/BimestreModel.php';
+        $this->bimestreModel = new BimestreModel();
 
         // Obtener datos del alumno logueado
         $this->alumno = $this->alumnoModel->obtenerPorUsuarioId($_SESSION['id_usuario']);

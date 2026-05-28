@@ -6,6 +6,7 @@ class DependenciaController extends Controller {
     private $cicloModel;
     private $asignacionModel;
     private $documentoModel;
+    private $bimestreModel;
     private $id_dependencia;
 
     public function __construct() {
@@ -22,6 +23,7 @@ class DependenciaController extends Controller {
         require_once APP_PATH . '/models/CicloModel.php';
         require_once APP_PATH . '/models/AsignacionModel.php';
         require_once APP_PATH . '/models/DocumentoModel.php';
+        require_once APP_PATH . '/models/BimestreModel.php';
 
         $this->dependenciaModel = new DependenciaModel();
         $this->programaModel = new ProgramaModel();
@@ -29,6 +31,7 @@ class DependenciaController extends Controller {
         $this->cicloModel = new CicloModel();
         $this->asignacionModel = new AsignacionModel();
         $this->documentoModel = new DocumentoModel();
+        $this->bimestreModel = new BimestreModel();
 
         $this->id_dependencia = $this->dependenciaModel->getIdDependenciaPorUsuario($_SESSION['id_usuario']);
     }
@@ -259,6 +262,48 @@ class DependenciaController extends Controller {
                 // Eliminar programa
                 $this->programaModel->eliminarPrograma($id);
                 $this->redirect('dependencia/misProgramas?success=eliminado');
+                return;
+            }
+        }
+        $this->redirect('dependencia/misProgramas');
+    }
+
+    public function configurar_bimestres() {
+        if (isset($_GET['id'])) {
+            $idPrograma = (int)$_GET['id'];
+            $programa = $this->programaModel->obtenerProgramaPorId($idPrograma);
+            
+            // Validate ownership
+            if ($programa && $programa['id_dependencia'] == $this->id_dependencia) {
+                $bimestres = $this->bimestreModel->obtenerBimestresPorPrograma($idPrograma);
+                $this->view('dependencia/configurar_bimestres', [
+                    'programa' => $programa,
+                    'bimestres' => $bimestres
+                ]);
+                return;
+            }
+        }
+        $this->redirect('dependencia/misProgramas');
+    }
+
+    public function guardar_configuracion_bimestres() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_programa'])) {
+            $idPrograma = (int)$_POST['id_programa'];
+            $programa = $this->programaModel->obtenerProgramaPorId($idPrograma);
+            
+            // Validate ownership
+            if ($programa && $programa['id_dependencia'] == $this->id_dependencia) {
+                // Process each of the 3 bimestres
+                for ($i = 1; $i <= 3; $i++) {
+                    $fechaInicio = !empty($_POST["fecha_inicio_$i"]) ? $_POST["fecha_inicio_$i"] : null;
+                    $fechaFin = !empty($_POST["fecha_fin_$i"]) ? $_POST["fecha_fin_$i"] : null;
+                    $habilitado = isset($_POST["habilitado_$i"]) ? true : false;
+
+                    $this->bimestreModel->guardarBimestre($idPrograma, $i, $fechaInicio, $fechaFin, $habilitado);
+                }
+                
+                $_SESSION['flash_success'] = 'Configuración de bimestres guardada correctamente.';
+                $this->redirect("dependencia/configurar_bimestres?id={$idPrograma}");
                 return;
             }
         }

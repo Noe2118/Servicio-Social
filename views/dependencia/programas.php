@@ -257,6 +257,7 @@
                                 <div class="dropdown">
                                     <button class="actions-btn" data-bs-toggle="dropdown"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/dependencia/configurar_bimestres?id=<?= $p['id_programa'] ?>"><i class="fa-regular fa-calendar-check text-success me-2"></i> Configurar Bimestres</a></li>
                                         <li><a class="dropdown-item" href="<?= BASE_URL ?>/dependencia/editarPrograma?id=<?= $p['id_programa'] ?>"><i class="fa-solid fa-pen text-primary me-2"></i> Editar</a></li>
                                         <li><a class="dropdown-item text-danger" href="<?= BASE_URL ?>/dependencia/eliminarPrograma?id=<?= $p['id_programa'] ?>" onclick="return confirm('¿Estás seguro de desactivar y eliminar este programa? Todos los alumnos inscritos serán desvinculados.')"><i class="fa-solid fa-trash-can me-2"></i> Desactivar</a></li>
                                     </ul>

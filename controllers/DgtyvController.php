@@ -178,6 +178,7 @@ class DgtyvController extends Controller {
         
         $documentoSeleccionado = null;
         $idSeleccionado = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+        $docBimestrales = [];
 
         if ($idSeleccionado > 0) {
             $documentoSeleccionado = $this->documentoModel->obtenerDocumentoPorIdAdmin($idSeleccionado);
@@ -185,10 +186,18 @@ class DgtyvController extends Controller {
             $documentoSeleccionado = $this->documentoModel->obtenerDocumentoPorIdAdmin($documentos[0]['id_documento']);
         }
 
+        if ($documentoSeleccionado) {
+            $todos = $this->documentoModel->obtenerPorAlumno($documentoSeleccionado['id_alumno']);
+            $docBimestrales = array_filter($todos, function($d) {
+                return str_contains($d['tipo_documento'], 'Bimestral') || str_contains($d['tipo_documento'], 'Evaluación Cualitativa');
+            });
+        }
+
         $this->view('dgtyv/expedientes', [
             'titulo' => 'Revisión de Expedientes',
             'documentos' => $documentos,
             'documentoSeleccionado' => $documentoSeleccionado,
+            'docBimestrales' => $docBimestrales,
             'paginaActiva' => 'expedientes'
         ]);
     }

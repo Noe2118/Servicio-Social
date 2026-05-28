@@ -171,6 +171,21 @@ CREATE TABLE `evaluaciones` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `bimestres_programa`
+--
+
+CREATE TABLE `bimestres_programa` (
+  `id_bimestre_prog` int(11) NOT NULL,
+  `id_programa` int(11) NOT NULL,
+  `numero_bimestre` int(11) NOT NULL,
+  `fecha_inicio` date DEFAULT NULL,
+  `fecha_fin` date DEFAULT NULL,
+  `habilitado` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `horarios_programas`
 --
 
@@ -297,6 +312,13 @@ ALTER TABLE `documentos`
   ADD KEY `idx_estado_doc` (`estado_validacion`);
 
 --
+-- Indexes for table `bimestres_programa`
+--
+ALTER TABLE `bimestres_programa`
+  ADD PRIMARY KEY (`id_bimestre_prog`),
+  ADD UNIQUE KEY `uk_prog_bimestre` (`id_programa`, `numero_bimestre`);
+
+--
 -- Indexes for table `evaluaciones`
 --
 ALTER TABLE `evaluaciones`
@@ -361,6 +383,12 @@ ALTER TABLE `documentos`
   MODIFY `id_documento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `bimestres_programa`
+--
+ALTER TABLE `bimestres_programa`
+  MODIFY `id_bimestre_prog` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `evaluaciones`
 --
 ALTER TABLE `evaluaciones`
@@ -419,6 +447,12 @@ ALTER TABLE `dependencias`
 --
 ALTER TABLE `documentos`
   ADD CONSTRAINT `documentos_ibfk_1` FOREIGN KEY (`id_alumno`) REFERENCES `alumnos` (`id_alumno`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `bimestres_programa`
+--
+ALTER TABLE `bimestres_programa`
+  ADD CONSTRAINT `fk_bimestre_programa` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `evaluaciones`

@@ -66,9 +66,9 @@
         <div class="card-custom">
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-4"><i class="bi bi-folder2-open text-primary me-2"></i>Expediente y Documentos</h5>
-                
+                <!-- Expediente de Documentos Iniciales -->
                 <div class="table-responsive">
-                    <table class="table align-middle">
+                    <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>Documento</th>
@@ -78,12 +78,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($documentos)): ?>
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">No hay documentos en el expediente de este alumno.</td>
-                                </tr>
+                            <?php 
+                                $docIniciales = array_filter($documentos, function($d) {
+                                    return !str_contains($d['tipo_documento'], 'Bimestral') && !str_contains($d['tipo_documento'], 'Evaluación Cualitativa');
+                                });
+                                $docBimestrales = array_filter($documentos, function($d) {
+                                    return str_contains($d['tipo_documento'], 'Bimestral') || str_contains($d['tipo_documento'], 'Evaluación Cualitativa');
+                                });
+                            ?>
+                            <?php if (empty($docIniciales)): ?>
+                                <tr><td colspan="4" class="text-center text-muted">Aún no hay documentos iniciales subidos.</td></tr>
                             <?php else: ?>
-                                <?php foreach ($documentos as $doc): ?>
+                                <?php foreach ($docIniciales as $doc): ?>
                                     <tr>
                                         <td class="fw-semibold text-dark"><?= htmlspecialchars($doc['tipo_documento'] ?? '') ?></td>
                                         <td>
@@ -107,11 +113,39 @@
                     </table>
                 </div>
 
-                <!-- Evaluaciones (Placeholder o enlace futuro) -->
+                <!-- Evaluaciones y Reportes Bimestrales -->
                 <div class="mt-5 border-top pt-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-clipboard2-check text-success me-2"></i>Reportes y Evaluaciones Bimestrales</h5>
-                    <p class="text-muted">Las evaluaciones de desempeño del alumno en este programa se encuentran en el módulo correspondiente.</p>
-                    <a href="<?= BASE_URL ?>/dependencia/evaluaciones" class="btn btn-primary btn-sm mt-2">Ir a Evaluaciones Bimestrales</a>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-clipboard2-check text-success me-2"></i>Historial de Reportes Bimestrales</h5>
+                    <p class="text-muted">A continuación se muestran los reportes y evaluaciones cualitativas subidas por el alumno por cada periodo.</p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Documento / Periodo</th>
+                                    <th>Archivo</th>
+                                    <th>Fecha de Subida</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($docBimestrales)): ?>
+                                    <tr><td colspan="3" class="text-center text-muted">Aún no hay reportes bimestrales subidos.</td></tr>
+                                <?php else: ?>
+                                    <?php foreach ($docBimestrales as $doc): ?>
+                                        <tr>
+                                            <td class="fw-semibold text-dark"><?= htmlspecialchars($doc['tipo_documento'] ?? '') ?></td>
+                                            <td>
+                                                <a href="<?= BASE_URL ?><?= htmlspecialchars($doc['ruta_servidor'] ?? '') ?>" target="_blank" class="text-decoration-none btn btn-sm btn-light border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-1"></i> Ver PDF
+                                                </a>
+                                            </td>
+                                            <td class="text-muted"><?= htmlspecialchars($doc['fecha_subida'] ?? '') ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

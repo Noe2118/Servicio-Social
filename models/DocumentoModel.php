@@ -118,8 +118,9 @@ class DocumentoModel {
              JOIN alumnos a ON d.id_alumno = a.id_alumno 
              LEFT JOIN asignaciones asig ON a.id_alumno = asig.id_alumno AND asig.estado_asignacion IN ('Pendiente', 'Activo')
              LEFT JOIN programas p ON asig.id_programa = p.id_programa
-             WHERE d.estado_validacion IN ('Nuevo', 'Corregido') 
-             OR (asig.estado_asignacion = 'Pendiente' AND d.estado_validacion = 'Aprobado')
+             WHERE (d.estado_validacion IN ('Nuevo', 'Corregido') 
+             OR (asig.estado_asignacion = 'Pendiente' AND d.estado_validacion = 'Aprobado'))
+             AND d.tipo_documento NOT LIKE '%Bimestral%' AND d.tipo_documento NOT LIKE '%Evaluación Cualitativa%'
              ORDER BY d.fecha_subida DESC"
         );
         return $stmt->fetchAll();

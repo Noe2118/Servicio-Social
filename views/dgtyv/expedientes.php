@@ -211,6 +211,41 @@
                             <span class="badge bg-secondary">Estado actual: <?= htmlspecialchars($documentoSeleccionado['estado_asignacion'] ?? 'Ninguno') ?></span>
                         <?php endif; ?>
                     </div>
+
+                    <!-- Historial de Reportes Bimestrales -->
+                    <div class="mt-4 border p-3 rounded bg-light shadow-sm">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-journal-check text-success me-2"></i>Historial de Reportes Bimestrales</h6>
+                        <p class="text-muted small">Documentos subidos por el alumno durante su servicio (Solo lectura).</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle" style="font-size: 0.9rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Documento</th>
+                                        <th>Archivo</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($docBimestrales)): ?>
+                                        <tr><td colspan="3" class="text-center text-muted">No hay reportes bimestrales subidos.</td></tr>
+                                    <?php else: ?>
+                                        <?php foreach ($docBimestrales as $doc): ?>
+                                            <tr>
+                                                <td class="fw-semibold text-dark"><?= htmlspecialchars($doc['tipo_documento'] ?? '') ?></td>
+                                                <td>
+                                                    <a href="<?= BASE_URL ?><?= htmlspecialchars($doc['ruta_servidor'] ?? '') ?>" target="_blank" class="text-decoration-none btn btn-sm btn-light border py-0" style="font-size: 0.85rem;">
+                                                        <i class="bi bi-file-pdf text-danger me-1"></i> Ver PDF
+                                                    </a>
+                                                </td>
+                                                <td class="text-muted"><?= date('d/m/Y', strtotime($doc['fecha_subida'] ?? '')) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         <?php else: ?>
