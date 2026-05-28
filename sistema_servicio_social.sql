@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 28, 2026 at 07:27 PM
+-- Generation Time: May 28, 2026 at 11:07 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -46,7 +46,7 @@ CREATE TABLE `alumnos` (
 
 INSERT INTO `alumnos` (`id_alumno`, `id_usuario`, `no_control`, `nombre_completo`, `carrera`, `periodo_actual`, `porcentaje_creditos`, `horas_completadas`, `estado_servicio`, `notificacion`) VALUES
 (1, 3, '22560001', 'Juan Carlos Pérez López', 'Ing. en Sistemas Computacionales', 'Ene-Jun 2026', 75.50, 500, 'En curso', NULL),
-(2, 4, '23390085', 'Saul Misael Colli Kumul', 'Ingeniería en Sistemas Computacionales', 'Ene-Jun 2026', 100.00, 0, 'En curso', NULL);
+(2, 4, '23390085', 'Saul Misael Colli Kumul', 'Ingeniería en Sistemas Computacionales', 'Ene-Jun 2026', 100.00, 0, 'Liberado', NULL);
 
 -- --------------------------------------------------------
 
@@ -73,7 +73,7 @@ CREATE TABLE `asignaciones` (
 
 INSERT INTO `asignaciones` (`id_asignacion`, `id_alumno`, `id_programa`, `fecha_asignacion`, `estado_asignacion`, `motivo_baja`, `estado_reportes`, `motivo_rechazo_reportes`, `estado_reporte_final`, `motivo_rechazo_final`) VALUES
 (1, 1, 1, '2025-08-15', 'Activo', NULL, 'Pendiente', NULL, 'No Subido', NULL),
-(2, 2, 4, '2026-05-28', 'Activo', NULL, 'Pendiente', NULL, 'No Subido', NULL);
+(2, 2, 4, '2026-05-28', 'Concluido', NULL, 'Aprobado', NULL, 'Aprobado', NULL);
 
 -- --------------------------------------------------------
 
@@ -185,7 +185,10 @@ INSERT INTO `documentos` (`id_documento`, `id_alumno`, `tipo_documento`, `nombre
 (4, 2, 'Créditos Complementarios', 'Local, IT Chetumal, Software Inteligente, Equipo Project ResQ.pdf', '/uploads/documentos/1779987486_8241_Local__IT_Chetumal__Software_Inteligente__Equipo_Project_ResQ.pdf', '2026-05-28 11:58:06', 'Aprobado', ''),
 (5, 2, 'EVALUACIÓN CUALITATIVA DEL PRESTADOR DE SERVICIO SOCIAL 1', 'Rúbrica Unidad 2.pdf', '/public/uploads/documentos/1779987558_2_R__brica_Unidad_2.pdf', '2026-05-28 11:59:18', 'Nuevo', NULL),
 (6, 2, 'Reporte Bimestral 1', 'Rúbrica Unidad 2.pdf', '/public/uploads/documentos/1779987620_2_R__brica_Unidad_2.pdf', '2026-05-28 12:00:20', 'Nuevo', NULL),
-(7, 2, 'Evaluación Cualitativa 1', 'certificado_20260227.pdf', '/public/uploads/documentos/1779987620_2_certificado_20260227.pdf', '2026-05-28 12:00:20', 'Nuevo', NULL);
+(7, 2, 'Evaluación Cualitativa 1', 'certificado_20260227.pdf', '/public/uploads/documentos/1779987620_2_certificado_20260227.pdf', '2026-05-28 12:00:20', 'Nuevo', NULL),
+(8, 2, 'EVALUACIÓN CUALITATIVA POR LA OFICINA DE SERVICIO SOCIAL Y DESARROLLO COMUNITARIO', 'UNIDAD 3_Programacion. Equipo Colli, Medina, Puc, Tun.pdf', '/public/uploads/documentos/1779993116_2_UNIDAD_3_Programacion._Equipo_Colli__Medina__Puc__Tun.pdf', '2026-05-28 13:31:56', 'Nuevo', NULL),
+(9, 2, 'Reporte Final de Servicio Social', 'Rúbrica Unidad 2.pdf', '/public/uploads/documentos/1779993204_2_R__brica_Unidad_2.pdf', '2026-05-28 13:33:24', 'Aprobado', ''),
+(10, 2, 'Constancia de Liberación', 'Rúbrica Unidad 2.pdf', '/public/uploads/documentos/1780002164_2_R__brica_Unidad_2.pdf', '2026-05-28 16:02:44', 'Nuevo', NULL);
 
 -- --------------------------------------------------------
 
@@ -406,7 +409,7 @@ ALTER TABLE `dependencias`
 -- AUTO_INCREMENT for table `documentos`
 --
 ALTER TABLE `documentos`
-  MODIFY `id_documento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id_documento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `evaluaciones`
@@ -497,12 +500,3 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
- 
- - -   A c t u a l i z a c i o n   p a r a   e v a l u a c i o n e s   D G T y V   d e   r e p o r t e s   b i m e s t r a l e s 
- 
- A L T E R   T A B L E   a s i g n a c i o n e s   A D D   C O L U M N   e s t a d o _ r e p o r t e s   E N U M ( ' P e n d i e n t e ' ,   ' A p r o b a d o ' ,   ' R e c h a z a d o ' )   D E F A U L T   ' P e n d i e n t e ' ; 
- 
- A L T E R   T A B L E   a s i g n a c i o n e s   A D D   C O L U M N   m o t i v o _ r e c h a z o _ r e p o r t e s   T E X T   N U L L ; 
- 
- 

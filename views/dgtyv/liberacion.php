@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1"><i class="bi bi-award-fill text-primary me-2"></i>Reporte Final y Liberación</h2>
-            <p class="text-muted mb-0">Evalúa el Reporte Final de los alumnos con 480 horas y emite su Constancia de Liberación Oficial.</p>
+            <p class="text-muted mb-0">Evalúa el Reporte Final de los alumnos con bimestrales aprobados y emite su Constancia de Liberación Oficial.</p>
         </div>
     </div>
 
@@ -46,7 +46,7 @@
                         <?php if (empty($alumnos)): ?>
                             <div class="text-center p-4 text-muted small">
                                 <i class="bi bi-person-x fs-3 d-block mb-2 text-light"></i>
-                                No hay alumnos con 480 hrs en curso.
+                                No hay alumnos con bimestrales aprobados en curso.
                             </div>
                         <?php else: ?>
                             <?php foreach ($alumnos as $al): ?>

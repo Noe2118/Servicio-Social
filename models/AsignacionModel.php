@@ -20,7 +20,7 @@ class AsignacionModel {
              INNER JOIN programas p ON a.id_programa = p.id_programa
              INNER JOIN dependencias d ON p.id_dependencia = d.id_dependencia
              WHERE a.id_alumno = :id_alumno
-               AND a.estado_asignacion IN ('Activo', 'Pendiente')
+               AND a.estado_asignacion IN ('Activo', 'Pendiente', 'Concluido')
              ORDER BY a.fecha_asignacion DESC
              LIMIT 1"
         );
