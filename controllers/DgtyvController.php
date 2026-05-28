@@ -189,7 +189,7 @@ class DgtyvController extends Controller {
         if ($documentoSeleccionado) {
             $todos = $this->documentoModel->obtenerPorAlumno($documentoSeleccionado['id_alumno']);
             $docBimestrales = array_filter($todos, function($d) {
-                return str_contains($d['tipo_documento'], 'Bimestral') || str_contains($d['tipo_documento'], 'Evaluación Cualitativa');
+                return stripos($d['tipo_documento'], 'Bimestral') !== false || stripos($d['tipo_documento'], 'Evaluación Cualitativa') !== false;
             });
         }
 

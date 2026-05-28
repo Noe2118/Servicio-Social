@@ -64,24 +64,85 @@ class DependenciaController extends Controller {
         ]);
     }
 
-    public function evaluaciones() {
-        $alumnos = $this->evaluacionModel->getAlumnosParaEvaluacion($this->id_dependencia);
+    public function reportes_bimestrales() {
+        $programas = $this->programaModel->getProgramasPorDependencia($this->id_dependencia);
         
-        $alumno_seleccionado = null;
-        if (isset($_GET['alumno_id'])) {
-            foreach ($alumnos as $al) {
-                if ($al['id_alumno'] == $_GET['alumno_id']) {
-                    $alumno_seleccionado = $al;
-                    break;
-                }
-            }
-        } else if (count($alumnos) > 0) {
-            $alumno_seleccionado = $alumnos[0];
+        $id_programa = isset($_GET['id_programa']) ? (int) $_GET['id_programa'] : 0;
+        $id_alumno = isset($_GET['id_alumno']) ? (int) $_GET['id_alumno'] : 0;
+        
+        if ($id_programa == 0 && count($programas) > 0) {
+            $id_programa = $programas[0]['id_programa'];
         }
 
-        $this->view('dependencia/evaluaciones', [
+        $alumnos = [];
+        $alumno_seleccionado = null;
+        $estadoBimestres = [];
+
+        if ($id_programa > 0) {
+            // Get all students active in this program
+            // Wait, we need a query to get active students by program.
+            $todosAlumnos = $this->asignacionModel->obtenerAlumnosActivosPorDependencia($this->id_dependencia);
+            foreach ($todosAlumnos as $al) {
+                if ($al['id_programa'] == $id_programa) {
+                    $alumnos[] = $al;
+                }
+            }
+
+            if ($id_alumno > 0) {
+                foreach ($alumnos as $al) {
+                    if ($al['id_alumno'] == $id_alumno) {
+                        $alumno_seleccionado = $al;
+                        break;
+                    }
+                }
+            } elseif (count($alumnos) > 0) {
+                $alumno_seleccionado = $alumnos[0];
+            }
+        }
+
+        if ($alumno_seleccionado) {
+            $idAlumnoSel = $alumno_seleccionado['id_alumno'];
+            $bimestresConfig = $this->bimestreModel->obtenerBimestresPorPrograma($id_programa);
+            $todosDocumentos = $this->documentoModel->obtenerPorAlumno($idAlumnoSel);
+
+            $estadoBimestres = [
+                1 => ['habilitado' => false, 'evaluacion_subida' => false, 'bloqueado' => false, 'documento' => null],
+                2 => ['habilitado' => false, 'evaluacion_subida' => false, 'bloqueado' => true, 'documento' => null],
+                3 => ['habilitado' => false, 'evaluacion_subida' => false, 'bloqueado' => true, 'documento' => null]
+            ];
+
+            foreach ($bimestresConfig as $num => $config) {
+                $estadoBimestres[$num]['habilitado'] = (bool)$config['habilitado'];
+                $estadoBimestres[$num]['config'] = $config;
+            }
+
+            foreach ($todosDocumentos as $doc) {
+                for ($i = 1; $i <= 3; $i++) {
+                    // Check if Dependencia uploaded the eval
+                    if (str_contains($doc['tipo_documento'], "EVALUACIÓN CUALITATIVA DEL PRESTADOR DE SERVICIO SOCIAL $i")) {
+                        $estadoBimestres[$i]['evaluacion_subida'] = true;
+                        $estadoBimestres[$i]['documento'] = $doc;
+                    }
+                }
+            }
+
+            // Bloqueo estricto
+            $estadoBimestres[1]['bloqueado'] = !$estadoBimestres[1]['habilitado'];
+            if ($estadoBimestres[1]['evaluacion_subida'] && $estadoBimestres[2]['habilitado']) {
+                $estadoBimestres[2]['bloqueado'] = false;
+            }
+            if ($estadoBimestres[2]['evaluacion_subida'] && $estadoBimestres[3]['habilitado']) {
+                $estadoBimestres[3]['bloqueado'] = false;
+            }
+        }
+
+        $this->view('dependencia/reportes_bimestrales', [
+            'programas' => $programas,
+            'id_programa_seleccionado' => $id_programa,
             'alumnos' => $alumnos,
-            'alumno_seleccionado' => $alumno_seleccionado
+            'alumno_seleccionado' => $alumno_seleccionado,
+            'estadoBimestres' => $estadoBimestres,
+            'paginaActiva' => 'reportes_bimestrales'
         ]);
     }
 
@@ -149,18 +210,41 @@ class DependenciaController extends Controller {
         $this->redirect('dependencia/alumnos');
     }
 
-    public function guardarEvaluacion() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id_alumno = $_POST['id_alumno'];
-            $id_programa = $_POST['id_programa'];
-            $nivel_desempeno = $_POST['nivel_desempeno'];
-            $comentarios = $_POST['comentarios_supervisor'];
-            $fecha = date('Y-m-d');
-
-            $this->evaluacionModel->guardarEvaluacion($id_alumno, $id_programa, $nivel_desempeno, $comentarios, $fecha);
-            
-            $this->redirect('dependencia/alumnos?success=1');
+    public function subir_evaluacion_bimestral() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_FILES['evaluacion_pdf'])) {
+            $this->redirect('dependencia/reportes_bimestrales');
+            return;
         }
+
+        $idAlumno = (int) $_POST['id_alumno'];
+        $idPrograma = (int) $_POST['id_programa'];
+        $numBimestre = (int) $_POST['numero_bimestre'];
+        
+        $uploadDir = APP_PATH . '/public/uploads/documentos/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+        $tipoDoc = "EVALUACIÓN CUALITATIVA DEL PRESTADOR DE SERVICIO SOCIAL $numBimestre";
+        
+        if ($_FILES['evaluacion_pdf']['error'] === UPLOAD_ERR_OK) {
+            $tmpName = $_FILES['evaluacion_pdf']['tmp_name'];
+            $originalName = $_FILES['evaluacion_pdf']['name'];
+            
+            $safeName = preg_replace('/[^a-zA-Z0-9.\-_]/', '_', $originalName);
+            $newName = time() . '_' . $idAlumno . '_' . $safeName;
+            $destPath = $uploadDir . $newName;
+
+            if (move_uploaded_file($tmpName, $destPath)) {
+                $rutaDB = '/public/uploads/documentos/' . $newName;
+                $this->documentoModel->subirDocumento($idAlumno, $tipoDoc, $originalName, $rutaDB);
+                $_SESSION['flash_success'] = "Evaluación del Bimestre $numBimestre subida correctamente.";
+            } else {
+                $_SESSION['flash_error'] = "Error al mover el archivo al servidor.";
+            }
+        } else {
+            $_SESSION['flash_error'] = "Error al subir el archivo PDF.";
+        }
+
+        $this->redirect("dependencia/reportes_bimestrales?id_programa=$idPrograma&id_alumno=$idAlumno");
     }
 
     public function crearPrograma() {

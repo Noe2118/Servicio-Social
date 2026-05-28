@@ -70,6 +70,18 @@
                     <div class="alert alert-success bg-success bg-opacity-10 border-0 mt-3">
                         <i class="bi bi-check-circle-fill text-success me-2"></i> Documentos subidos correctamente.
                     </div>
+                    <?php if (isset($estado['evaluacion_dependencia'])): ?>
+                        <div class="mt-3 p-3 bg-light border rounded">
+                            <h6 class="small fw-bold text-dark mb-2"><i class="bi bi-star-fill text-warning me-1"></i> Evaluación del Responsable:</h6>
+                            <a href="<?= BASE_URL ?><?= htmlspecialchars($estado['evaluacion_dependencia']['ruta_servidor'] ?? '') ?>" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> Ver Evaluación
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <div class="mt-3 text-muted small text-center">
+                            <i class="bi bi-clock-history me-1"></i> Esperando evaluación del responsable.
+                        </div>
+                    <?php endif; ?>
                 <?php elseif ($estado['bloqueado']): ?>
                     <div class="alert alert-secondary bg-secondary bg-opacity-10 border-0 mt-3 small">
                         <i class="bi bi-lock-fill me-1"></i> Debes completar el bimestre anterior para desbloquear este.

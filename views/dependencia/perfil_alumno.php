@@ -80,10 +80,10 @@
                         <tbody>
                             <?php 
                                 $docIniciales = array_filter($documentos, function($d) {
-                                    return !str_contains($d['tipo_documento'], 'Bimestral') && !str_contains($d['tipo_documento'], 'Evaluación Cualitativa');
+                                    return stripos($d['tipo_documento'], 'Bimestral') === false && stripos($d['tipo_documento'], 'Evaluación Cualitativa') === false;
                                 });
                                 $docBimestrales = array_filter($documentos, function($d) {
-                                    return str_contains($d['tipo_documento'], 'Bimestral') || str_contains($d['tipo_documento'], 'Evaluación Cualitativa');
+                                    return stripos($d['tipo_documento'], 'Bimestral') !== false || stripos($d['tipo_documento'], 'Evaluación Cualitativa') !== false;
                                 });
                             ?>
                             <?php if (empty($docIniciales)): ?>

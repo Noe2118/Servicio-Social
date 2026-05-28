@@ -178,9 +178,9 @@
     </div>
     <ul class="sidebar-nav">
         <li><a href="<?= BASE_URL ?>/dependencia/dashboard"><i class="fa-regular fa-rectangle-list"></i> Dashboard</a></li>
-        <li><a href="<?= BASE_URL ?>/dependencia/misProgramas" class="active"><i class="fa-regular fa-folder-open"></i> Mis Programas</a></li>
-        <li><a href="<?= BASE_URL ?>/dependencia/alumnos"><i class="fa-solid fa-user-check"></i> Alumnos Aceptados</a></li>
-        <li><a href="<?= BASE_URL ?>/dependencia/evaluaciones"><i class="fa-regular fa-address-book"></i> Evaluaciones</a></li>
+        <li><a href="<?= BASE_URL ?>/dependencia/misProgramas"><i class="fa-regular fa-folder-open"></i> Mis Programas</a></li>
+        <li><a href="<?= BASE_URL ?>/dependencia/alumnos" class="<?= ($paginaActiva ?? '') === 'alumnos' ? 'active' : '' ?>"><i class="fa-solid fa-user-check"></i> Alumnos Aceptados</a></li>
+        <li><a href="<?= BASE_URL ?>/dependencia/reportes_bimestrales" class="<?= ($paginaActiva ?? '') === 'reportes_bimestrales' ? 'active' : '' ?>"><i class="fa-regular fa-address-book"></i> Reportes Bimestrales</a></li>
     </ul>
     <div class="sidebar-bottom">
         <a href="<?= BASE_URL ?>/auth/logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión</a>

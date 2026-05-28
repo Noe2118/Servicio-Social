@@ -373,9 +373,9 @@ class AlumnoController extends Controller {
         
         // Analizar el estado de cada bimestre para el alumno
         $estadoBimestres = [
-            1 => ['habilitado' => false, 'docs_subidos' => 0, 'bloqueado' => false],
-            2 => ['habilitado' => false, 'docs_subidos' => 0, 'bloqueado' => true],
-            3 => ['habilitado' => false, 'docs_subidos' => 0, 'bloqueado' => true]
+            1 => ['habilitado' => false, 'docs_subidos' => 0, 'bloqueado' => false, 'evaluacion_dependencia' => null],
+            2 => ['habilitado' => false, 'docs_subidos' => 0, 'bloqueado' => true, 'evaluacion_dependencia' => null],
+            3 => ['habilitado' => false, 'docs_subidos' => 0, 'bloqueado' => true, 'evaluacion_dependencia' => null]
         ];
 
         // Verificar la configuración de la dependencia
@@ -389,6 +389,9 @@ class AlumnoController extends Controller {
             for ($i = 1; $i <= 3; $i++) {
                 if (str_contains($doc['tipo_documento'], "Bimestral $i") || str_contains($doc['tipo_documento'], "Cualitativa $i")) {
                     $estadoBimestres[$i]['docs_subidos']++;
+                }
+                if (stripos($doc['tipo_documento'], "EVALUACIÓN CUALITATIVA DEL PRESTADOR DE SERVICIO SOCIAL $i") !== false) {
+                    $estadoBimestres[$i]['evaluacion_dependencia'] = $doc;
                 }
             }
         }
