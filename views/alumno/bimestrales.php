@@ -33,10 +33,19 @@
     </ul>
 </div>
 
+<?php if (isset($asignacion['estado_reportes']) && $asignacion['estado_reportes'] === 'Rechazado'): ?>
+<div class="alert alert-danger border-danger shadow-sm rounded-3 mt-3">
+    <h5 class="alert-heading fw-bold"><i class="bi bi-x-circle-fill me-2"></i>Tus reportes han sido rechazados por la DGTyV</h5>
+    <p class="mb-1"><strong>Motivo:</strong> <?= htmlspecialchars($asignacion['motivo_rechazo_reportes'] ?? '') ?></p>
+    <hr>
+    <p class="mb-0 small">Por favor, vuelve a subir los documentos corregidos en los apartados correspondientes abajo. Al subir un nuevo documento, reemplazará al anterior y se enviará nuevamente a revisión.</p>
+</div>
+<?php endif; ?>
+
 <div class="row g-4 mt-2">
     <?php for ($i = 1; $i <= 3; $i++): 
         $estado = $estadoBimestres[$i];
-        $completado = $estado['docs_subidos'] >= 2;
+        $completado = $estado['docs_subidos'] >= 2 && (!isset($asignacion['estado_reportes']) || $asignacion['estado_reportes'] !== 'Rechazado');
     ?>
     <div class="col-md-4">
         <div class="card h-100 border-0 shadow-sm rounded-4 <?= $estado['bloqueado'] ? 'opacity-75 bg-light' : '' ?>">

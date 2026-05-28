@@ -192,7 +192,7 @@ class DependenciaController extends Controller {
                 $programa = $this->programaModel->obtenerProgramaPorId($idPrograma);
                 if ($programa && $programa['id_dependencia'] == $this->id_dependencia) {
                     if ($this->asignacionModel->actualizarEstadoAsignacion($idAlumno, $idPrograma, 'Baja', $motivo)) {
-                        require_once APP_PATH . '/models/Database.php';
+                        require_once APP_PATH . '/core/Database.php';
                         $db = Database::getInstance()->getConnection();
                         $db->prepare("UPDATE alumnos SET estado_servicio = 'Interrumpido' WHERE id_alumno = ?")->execute([$idAlumno]);
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 27, 2026 at 09:05 PM
+-- Generation Time: May 28, 2026 at 07:27 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -46,7 +46,7 @@ CREATE TABLE `alumnos` (
 
 INSERT INTO `alumnos` (`id_alumno`, `id_usuario`, `no_control`, `nombre_completo`, `carrera`, `periodo_actual`, `porcentaje_creditos`, `horas_completadas`, `estado_servicio`, `notificacion`) VALUES
 (1, 3, '22560001', 'Juan Carlos Pérez López', 'Ing. en Sistemas Computacionales', 'Ene-Jun 2026', 75.50, 500, 'En curso', NULL),
-(2, 4, '23390085', 'Saul Misael Colli Kumul', 'Ingeniería en Sistemas Computacionales', 'Ene-Jun 2026', 100.00, 0, 'Sin Iniciar', NULL);
+(2, 4, '23390085', 'Saul Misael Colli Kumul', 'Ingeniería en Sistemas Computacionales', 'Ene-Jun 2026', 100.00, 0, 'En curso', NULL);
 
 -- --------------------------------------------------------
 
@@ -60,15 +60,42 @@ CREATE TABLE `asignaciones` (
   `id_programa` int(11) NOT NULL,
   `fecha_asignacion` date NOT NULL,
   `estado_asignacion` enum('Pendiente','Activo','Concluido','Baja') DEFAULT 'Pendiente',
-  `motivo_baja` text DEFAULT NULL
+  `motivo_baja` text DEFAULT NULL,
+  `estado_reportes` enum('Pendiente','Aprobado','Rechazado') DEFAULT 'Pendiente',
+  `motivo_rechazo_reportes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `asignaciones`
 --
 
-INSERT INTO `asignaciones` (`id_asignacion`, `id_alumno`, `id_programa`, `fecha_asignacion`, `estado_asignacion`) VALUES
-(1, 1, 1, '2025-08-15', 'Activo');
+INSERT INTO `asignaciones` (`id_asignacion`, `id_alumno`, `id_programa`, `fecha_asignacion`, `estado_asignacion`, `motivo_baja`, `estado_reportes`, `motivo_rechazo_reportes`) VALUES
+(1, 1, 1, '2025-08-15', 'Activo', NULL, 'Pendiente', NULL),
+(2, 2, 4, '2026-05-28', 'Activo', NULL, 'Pendiente', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bimestres_programa`
+--
+
+CREATE TABLE `bimestres_programa` (
+  `id_bimestre_prog` int(11) NOT NULL,
+  `id_programa` int(11) NOT NULL,
+  `numero_bimestre` int(11) NOT NULL,
+  `fecha_inicio` date DEFAULT NULL,
+  `fecha_fin` date DEFAULT NULL,
+  `habilitado` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `bimestres_programa`
+--
+
+INSERT INTO `bimestres_programa` (`id_bimestre_prog`, `id_programa`, `numero_bimestre`, `fecha_inicio`, `fecha_fin`, `habilitado`) VALUES
+(1, 4, 1, '2026-05-01', '2026-05-30', 1),
+(2, 4, 2, '2026-04-26', '2026-06-04', 1),
+(3, 4, 3, '2026-04-28', '2026-07-11', 1);
 
 -- --------------------------------------------------------
 
@@ -150,7 +177,13 @@ CREATE TABLE `documentos` (
 --
 
 INSERT INTO `documentos` (`id_documento`, `id_alumno`, `tipo_documento`, `nombre_archivo_original`, `ruta_servidor`, `fecha_subida`, `estado_validacion`, `comentarios_dgtyv`) VALUES
-(1, 1, 'Carta de Aceptación', 'UNIDAD 3_Programacion. Equipo Colli, Medina, Puc, Tun.pdf', '/uploads/documentos/1779817539_3791_UNIDAD_3_Programacion._Equipo_Colli__Medina__Puc__Tun.pdf', '2026-05-26 12:45:39', 'Aprobado', 'Todo bien');
+(1, 1, 'Carta de Aceptación', 'UNIDAD 3_Programacion. Equipo Colli, Medina, Puc, Tun.pdf', '/uploads/documentos/1779817539_3791_UNIDAD_3_Programacion._Equipo_Colli__Medina__Puc__Tun.pdf', '2026-05-26 12:45:39', 'Aprobado', 'Todo bien'),
+(2, 2, 'Asignación Compromiso de Servicio Social', 'UNIDAD 3_Programacion. Equipo Colli, Medina, Puc, Tun.pdf', '/uploads/documentos/1779987463_1046_UNIDAD_3_Programacion._Equipo_Colli__Medina__Puc__Tun.pdf', '2026-05-28 11:57:43', 'Aprobado', ''),
+(3, 2, 'Formato de Solicitud', 'UNIDAD 3_Programacion. Equipo Colli, Medina, Puc, Tun.pdf', '/uploads/documentos/1779987477_3900_UNIDAD_3_Programacion._Equipo_Colli__Medina__Puc__Tun.pdf', '2026-05-28 11:57:57', 'Aprobado', ''),
+(4, 2, 'Créditos Complementarios', 'Local, IT Chetumal, Software Inteligente, Equipo Project ResQ.pdf', '/uploads/documentos/1779987486_8241_Local__IT_Chetumal__Software_Inteligente__Equipo_Project_ResQ.pdf', '2026-05-28 11:58:06', 'Aprobado', ''),
+(5, 2, 'EVALUACIÓN CUALITATIVA DEL PRESTADOR DE SERVICIO SOCIAL 1', 'Rúbrica Unidad 2.pdf', '/public/uploads/documentos/1779987558_2_R__brica_Unidad_2.pdf', '2026-05-28 11:59:18', 'Nuevo', NULL),
+(6, 2, 'Reporte Bimestral 1', 'Rúbrica Unidad 2.pdf', '/public/uploads/documentos/1779987620_2_R__brica_Unidad_2.pdf', '2026-05-28 12:00:20', 'Nuevo', NULL),
+(7, 2, 'Evaluación Cualitativa 1', 'certificado_20260227.pdf', '/public/uploads/documentos/1779987620_2_certificado_20260227.pdf', '2026-05-28 12:00:20', 'Nuevo', NULL);
 
 -- --------------------------------------------------------
 
@@ -166,21 +199,6 @@ CREATE TABLE `evaluaciones` (
   `nivel_desempeno` enum('Excelente','Notable','Bueno','Suficiente','Insuficiente') NOT NULL,
   `comentarios_supervisor` text DEFAULT NULL,
   `fecha_evaluacion` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `bimestres_programa`
---
-
-CREATE TABLE `bimestres_programa` (
-  `id_bimestre_prog` int(11) NOT NULL,
-  `id_programa` int(11) NOT NULL,
-  `numero_bimestre` int(11) NOT NULL,
-  `fecha_inicio` date DEFAULT NULL,
-  `fecha_fin` date DEFAULT NULL,
-  `habilitado` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -236,7 +254,7 @@ INSERT INTO `programas` (`id_programa`, `id_dependencia`, `folio_programa`, `nom
 (1, 1, 'SS-2026-001', 'Reforestación y Cuidado Ambiental', 'Presencial', 'Apoyo en actividades de reforestación en zonas de selva baja en Othón P. Blanco.', 'Biología, Arquitectura, Ingeniería Civil', 10, 0, NULL, 'Ing. Carlos Mendoza', 'cmendoza@conafor.gob.mx', 'Aprobado', '2026-05-25'),
 (2, 1, 'SS-2026-002', 'Desarrollo de Sistema de Inventario', 'Virtual', 'Creación de software web para control de inventario de flora rescatada.', 'Ingeniería en Sistemas Computacionales, Informática', 3, 0, NULL, 'Lic. Ana Torres', 'atorres@conafor.gob.mx', 'Aprobado', '2026-05-25'),
 (3, 1, 'SS-2026-003', 'Campaña de Concientización Digital', 'Híbrida', 'Diseño multimedia para redes sociales fomentando la prevención de incendios.', 'Lic. en Administración, Arquitectura', 2, 0, NULL, 'Mtro. Roberto Ruiz', 'rruiz@conafor.gob.mx', 'Aprobado', '2026-05-25'),
-(4, 1, 'PRG-05B9B8', 'Test', 'Presencial', 'Pruebitassss', 'Ser chingón en todo', 15, 0, 'Mi casa jajakla', 'Saulini', 'saulmisaelcolli@gmail.com', 'Aprobado', '2026-05-27');
+(4, 1, 'PRG-05B9B8', 'Test', 'Presencial', 'Pruebitassss', 'Ser chingón en todo', 15, 1, 'Mi casa jajakla', 'Saulini', 'saulmisaelcolli@gmail.com', 'Aprobado', '2026-05-27');
 
 -- --------------------------------------------------------
 
@@ -284,6 +302,13 @@ ALTER TABLE `asignaciones`
   ADD KEY `id_programa` (`id_programa`);
 
 --
+-- Indexes for table `bimestres_programa`
+--
+ALTER TABLE `bimestres_programa`
+  ADD PRIMARY KEY (`id_bimestre_prog`),
+  ADD UNIQUE KEY `uk_prog_bimestre` (`id_programa`,`numero_bimestre`);
+
+--
 -- Indexes for table `ciclos`
 --
 ALTER TABLE `ciclos`
@@ -310,13 +335,6 @@ ALTER TABLE `documentos`
   ADD PRIMARY KEY (`id_documento`),
   ADD KEY `id_alumno` (`id_alumno`),
   ADD KEY `idx_estado_doc` (`estado_validacion`);
-
---
--- Indexes for table `bimestres_programa`
---
-ALTER TABLE `bimestres_programa`
-  ADD PRIMARY KEY (`id_bimestre_prog`),
-  ADD UNIQUE KEY `uk_prog_bimestre` (`id_programa`, `numero_bimestre`);
 
 --
 -- Indexes for table `evaluaciones`
@@ -362,7 +380,13 @@ ALTER TABLE `alumnos`
 -- AUTO_INCREMENT for table `asignaciones`
 --
 ALTER TABLE `asignaciones`
-  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `bimestres_programa`
+--
+ALTER TABLE `bimestres_programa`
+  MODIFY `id_bimestre_prog` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `ciclos`
@@ -380,13 +404,7 @@ ALTER TABLE `dependencias`
 -- AUTO_INCREMENT for table `documentos`
 --
 ALTER TABLE `documentos`
-  MODIFY `id_documento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `bimestres_programa`
---
-ALTER TABLE `bimestres_programa`
-  MODIFY `id_bimestre_prog` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_documento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `evaluaciones`
@@ -430,6 +448,12 @@ ALTER TABLE `asignaciones`
   ADD CONSTRAINT `asignaciones_ibfk_2` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `bimestres_programa`
+--
+ALTER TABLE `bimestres_programa`
+  ADD CONSTRAINT `fk_bimestre_programa` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `ciclos_programas`
 --
 ALTER TABLE `ciclos_programas`
@@ -447,12 +471,6 @@ ALTER TABLE `dependencias`
 --
 ALTER TABLE `documentos`
   ADD CONSTRAINT `documentos_ibfk_1` FOREIGN KEY (`id_alumno`) REFERENCES `alumnos` (`id_alumno`) ON DELETE CASCADE;
-
---
--- Constraints for table `bimestres_programa`
---
-ALTER TABLE `bimestres_programa`
-  ADD CONSTRAINT `fk_bimestre_programa` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `evaluaciones`
@@ -477,3 +495,12 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+ 
+ - -   A c t u a l i z a c i o n   p a r a   e v a l u a c i o n e s   D G T y V   d e   r e p o r t e s   b i m e s t r a l e s 
+ 
+ A L T E R   T A B L E   a s i g n a c i o n e s   A D D   C O L U M N   e s t a d o _ r e p o r t e s   E N U M ( ' P e n d i e n t e ' ,   ' A p r o b a d o ' ,   ' R e c h a z a d o ' )   D E F A U L T   ' P e n d i e n t e ' ; 
+ 
+ A L T E R   T A B L E   a s i g n a c i o n e s   A D D   C O L U M N   m o t i v o _ r e c h a z o _ r e p o r t e s   T E X T   N U L L ; 
+ 
+ 

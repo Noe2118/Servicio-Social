@@ -428,7 +428,10 @@
             <i class="bi bi-collection"></i> Catálogo de Programas
         </a>
         <a href="<?= BASE_URL ?>/dgtyv/expedientes" class="nav-link <?= ($paginaActiva ?? '') === 'expedientes' ? 'active' : '' ?>">
-            <i class="bi bi-folder2-open"></i> Revisión de Expedientes
+            <i class="bi bi-file-earmark-check"></i> Revisión Expedientes
+        </a>
+        <a href="<?= BASE_URL ?>/dgtyv/reportes_bimestrales" class="nav-link <?= ($paginaActiva ?? '') === 'reportes_bimestrales' ? 'active' : '' ?>">
+            <i class="bi bi-journal-bookmark-fill"></i> Reportes Bimestrales
         </a>
         <a href="<?= BASE_URL ?>/dgtyv/ciclos" class="nav-link <?= ($paginaActiva ?? '') === 'ciclos' ? 'active' : '' ?>">
             <i class="bi bi-calendar-range"></i> Gestión de Ciclos

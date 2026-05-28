@@ -459,10 +459,20 @@ class AlumnoController extends Controller {
             }
         }
 
-        if (empty($errores)) {
-            $_SESSION['flash_success'] = "Documentos del Bimestre $numBimestre subidos correctamente.";
+        if ($subidos > 0) {
+            // Reset estado_reportes to Pendiente if the student re-uploads after rejection
+            require_once APP_PATH . '/core/Database.php';
+            $db = Database::getInstance()->getConnection();
+            $stmt = $db->prepare("UPDATE asignaciones SET estado_reportes = 'Pendiente' WHERE id_alumno = ? AND estado_asignacion IN ('Activo', 'Pendiente')");
+            $stmt->execute([$idAlumno]);
+
+            if (empty($errores)) {
+                $_SESSION['flash_success'] = 'Documentos subidos correctamente.';
+            } else {
+                $_SESSION['flash_warning'] = 'Se subieron ' . $subidos . ' archivos, pero hubo errores: ' . implode(' ', $errores);
+            }
         } else {
-            $_SESSION['flash_error'] = implode(" ", $errores);
+            $_SESSION['flash_error'] = implode(' ', $errores);
         }
 
         $this->redirect('alumno/bimestrales');

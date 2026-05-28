@@ -431,4 +431,112 @@ class DgtyvController extends Controller {
         }
         $this->redirect('dgtyv/ciclos');
     }
+    public function reportes_bimestrales(): void {
+        $dependencias = $this->programaModel->obtenerDependenciasConProgramas();
+        
+        $id_dependencia = isset($_GET['id_dependencia']) ? (int) $_GET['id_dependencia'] : 0;
+        $id_programa = isset($_GET['id_programa']) ? (int) $_GET['id_programa'] : 0;
+        $id_alumno = isset($_GET['id_alumno']) ? (int) $_GET['id_alumno'] : 0;
+
+        $programas = [];
+        if ($id_dependencia > 0) {
+            $programas = $this->programaModel->getProgramasPorDependencia($id_dependencia);
+        }
+
+        $alumnos = [];
+        $alumno_seleccionado = null;
+        if ($id_programa > 0) {
+            $todosAlumnos = $this->asignacionModel->obtenerAlumnosActivosPorDependencia($id_dependencia);
+            foreach ($todosAlumnos as $al) {
+                if ($al['id_programa'] == $id_programa) {
+                    $alumnos[] = $al;
+                }
+            }
+            if ($id_alumno > 0) {
+                foreach ($alumnos as $al) {
+                    if ($al['id_alumno'] == $id_alumno) {
+                        $alumno_seleccionado = $al;
+                        break;
+                    }
+                }
+            } elseif (count($alumnos) > 0) {
+                $alumno_seleccionado = $alumnos[0];
+            }
+        }
+
+        $documentos_bimestrales = [];
+        if ($alumno_seleccionado) {
+            $todos = $this->documentoModel->obtenerPorAlumno($alumno_seleccionado['id_alumno']);
+            foreach ($todos as $doc) {
+                if (stripos($doc['tipo_documento'], 'Bimestral') !== false || 
+                    stripos($doc['tipo_documento'], 'Evaluación Cualitativa') !== false ||
+                    stripos($doc['tipo_documento'], 'OFICINA DE SERVICIO SOCIAL') !== false) {
+                    $documentos_bimestrales[] = $doc;
+                }
+            }
+        }
+
+        $this->view('dgtyv/reportes_bimestrales', [
+            'titulo' => 'Evaluación de Reportes Bimestrales',
+            'paginaActiva' => 'reportes_bimestrales',
+            'dependencias' => $dependencias,
+            'id_dependencia_sel' => $id_dependencia,
+            'programas' => $programas,
+            'id_programa_sel' => $id_programa,
+            'alumnos' => $alumnos,
+            'alumno_seleccionado' => $alumno_seleccionado,
+            'documentos_bimestrales' => $documentos_bimestrales
+        ]);
+    }
+
+    public function evaluar_reportes_alumno(): void {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id_alumno = (int)$_POST['id_alumno'];
+            $id_programa = (int)$_POST['id_programa'];
+            $id_dependencia = (int)$_POST['id_dependencia'];
+            $accion = $_POST['accion']; // 'Aprobar' o 'Rechazar'
+            
+            require_once APP_PATH . '/core/Database.php';
+            $db = Database::getInstance()->getConnection();
+
+            if ($accion === 'Rechazar') {
+                $motivo = trim($_POST['motivo_rechazo']);
+                $stmt = $db->prepare("UPDATE asignaciones SET estado_reportes = 'Rechazado', motivo_rechazo_reportes = ? WHERE id_alumno = ? AND id_programa = ? AND estado_asignacion IN ('Activo', 'Pendiente')");
+                if ($stmt->execute([$motivo, $id_alumno, $id_programa])) {
+                    $_SESSION['flash_success'] = 'Los reportes bimestrales han sido rechazados y el alumno ha sido notificado.';
+                } else {
+                    $_SESSION['flash_error'] = 'Error al rechazar los reportes.';
+                }
+            } elseif ($accion === 'Aprobar') {
+                if (isset($_FILES['evaluacion_oficina']) && $_FILES['evaluacion_oficina']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = APP_PATH . '/public/uploads/documentos/';
+                    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+                    $tmpName = $_FILES['evaluacion_oficina']['tmp_name'];
+                    $originalName = $_FILES['evaluacion_oficina']['name'];
+                    $safeName = preg_replace('/[^a-zA-Z0-9.\-_]/', '_', $originalName);
+                    $newName = time() . '_' . $id_alumno . '_' . $safeName;
+                    $destPath = $uploadDir . $newName;
+
+                    if (move_uploaded_file($tmpName, $destPath)) {
+                        $rutaDB = '/public/uploads/documentos/' . $newName;
+                        $tipoDoc = "EVALUACIÓN CUALITATIVA POR LA OFICINA DE SERVICIO SOCIAL Y DESARROLLO COMUNITARIO";
+                        
+                        $this->documentoModel->subirDocumento($id_alumno, $tipoDoc, $originalName, $rutaDB);
+                        
+                        $stmt = $db->prepare("UPDATE asignaciones SET estado_reportes = 'Aprobado', motivo_rechazo_reportes = NULL WHERE id_alumno = ? AND id_programa = ? AND estado_asignacion IN ('Activo', 'Pendiente')");
+                        $stmt->execute([$id_alumno, $id_programa]);
+                        
+                        $_SESSION['flash_success'] = 'Reportes aprobados y evaluación final subida correctamente.';
+                    } else {
+                        $_SESSION['flash_error'] = 'Error al guardar el documento PDF.';
+                    }
+                } else {
+                    $_SESSION['flash_error'] = 'Debe subir el documento PDF de la evaluación.';
+                }
+            }
+            
+            $this->redirect("dgtyv/reportes_bimestrales?id_dependencia=$id_dependencia&id_programa=$id_programa&id_alumno=$id_alumno");
+        }
+    }
 }
