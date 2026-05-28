@@ -62,16 +62,18 @@ CREATE TABLE `asignaciones` (
   `estado_asignacion` enum('Pendiente','Activo','Concluido','Baja') DEFAULT 'Pendiente',
   `motivo_baja` text DEFAULT NULL,
   `estado_reportes` enum('Pendiente','Aprobado','Rechazado') DEFAULT 'Pendiente',
-  `motivo_rechazo_reportes` text DEFAULT NULL
+  `motivo_rechazo_reportes` text DEFAULT NULL,
+  `estado_reporte_final` enum('No Subido','Pendiente','Aprobado','Rechazado') DEFAULT 'No Subido',
+  `motivo_rechazo_final` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `asignaciones`
 --
 
-INSERT INTO `asignaciones` (`id_asignacion`, `id_alumno`, `id_programa`, `fecha_asignacion`, `estado_asignacion`, `motivo_baja`, `estado_reportes`, `motivo_rechazo_reportes`) VALUES
-(1, 1, 1, '2025-08-15', 'Activo', NULL, 'Pendiente', NULL),
-(2, 2, 4, '2026-05-28', 'Activo', NULL, 'Pendiente', NULL);
+INSERT INTO `asignaciones` (`id_asignacion`, `id_alumno`, `id_programa`, `fecha_asignacion`, `estado_asignacion`, `motivo_baja`, `estado_reportes`, `motivo_rechazo_reportes`, `estado_reporte_final`, `motivo_rechazo_final`) VALUES
+(1, 1, 1, '2025-08-15', 'Activo', NULL, 'Pendiente', NULL, 'No Subido', NULL),
+(2, 2, 4, '2026-05-28', 'Activo', NULL, 'Pendiente', NULL, 'No Subido', NULL);
 
 -- --------------------------------------------------------
 

@@ -477,4 +477,81 @@ class AlumnoController extends Controller {
 
         $this->redirect('alumno/bimestrales');
     }
+    public function reporte_final(): void {
+        if (!$this->alumno) {
+            $this->redirect('alumno/dashboard');
+            return;
+        }
+
+        $idAlumno = (int) $this->alumno['id_alumno'];
+        $asignacion = $this->asignacionModel->obtenerAsignacionActiva($idAlumno);
+
+        if (!$asignacion) {
+            $_SESSION['flash_error'] = 'No tienes una asignación activa en ningún programa.';
+            $this->redirect('alumno/dashboard');
+            return;
+        }
+
+        // Obtener todos los documentos
+        $todosDocumentos = $this->documentoModel->obtenerPorAlumno($idAlumno);
+        
+        $documentoFinalSubido = null;
+        $constanciaLiberacion = null;
+
+        foreach ($todosDocumentos as $doc) {
+            if (stripos($doc['tipo_documento'], 'Reporte Final de Servicio Social') !== false) {
+                $documentoFinalSubido = $doc;
+            }
+            if (stripos($doc['tipo_documento'], 'Constancia de Liberación') !== false) {
+                $constanciaLiberacion = $doc;
+            }
+        }
+
+        $this->view('alumno/reporte_final', [
+            'alumno' => $this->alumno,
+            'asignacion' => $asignacion,
+            'documentoFinalSubido' => $documentoFinalSubido,
+            'constanciaLiberacion' => $constanciaLiberacion
+        ]);
+    }
+
+    public function subir_reporte_final(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_FILES['reporte_final_pdf'])) {
+            $this->redirect('alumno/reporte_final');
+            return;
+        }
+
+        $idAlumno = (int) $this->alumno['id_alumno'];
+
+        if ($_FILES['reporte_final_pdf']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = APP_PATH . '/public/uploads/documentos/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+            $tmpName = $_FILES['reporte_final_pdf']['tmp_name'];
+            $originalName = $_FILES['reporte_final_pdf']['name'];
+            $safeName = preg_replace('/[^a-zA-Z0-9.\-_]/', '_', $originalName);
+            $newName = time() . '_' . $idAlumno . '_' . $safeName;
+            $destPath = $uploadDir . $newName;
+
+            if (move_uploaded_file($tmpName, $destPath)) {
+                $rutaDB = '/public/uploads/documentos/' . $newName;
+                $tipoDoc = "Reporte Final de Servicio Social";
+                
+                $this->documentoModel->subirDocumento($idAlumno, $tipoDoc, $originalName, $rutaDB);
+                
+                require_once APP_PATH . '/core/Database.php';
+                $db = Database::getInstance()->getConnection();
+                $stmt = $db->prepare("UPDATE asignaciones SET estado_reporte_final = 'Pendiente' WHERE id_alumno = ? AND estado_asignacion IN ('Activo', 'Pendiente')");
+                $stmt->execute([$idAlumno]);
+
+                $_SESSION['flash_success'] = 'Reporte Final subido correctamente.';
+            } else {
+                $_SESSION['flash_error'] = 'Error al mover el archivo PDF.';
+            }
+        } else {
+            $_SESSION['flash_error'] = 'Error al subir el documento PDF.';
+        }
+
+        $this->redirect('alumno/reporte_final');
+    }
 }

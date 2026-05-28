@@ -287,35 +287,91 @@ class DgtyvController extends Controller {
      */
     public function liberacion(): void {
         $alumnos = $this->alumnoModel->obtenerAlumnosParaLiberacion();
+        
+        $id_alumno = isset($_GET['id_alumno']) ? (int) $_GET['id_alumno'] : 0;
+        $alumno_seleccionado = null;
+        
+        if ($id_alumno > 0) {
+            foreach ($alumnos as $al) {
+                if ($al['id_alumno'] == $id_alumno) {
+                    $alumno_seleccionado = $al;
+                    break;
+                }
+            }
+        } elseif (count($alumnos) > 0) {
+            $alumno_seleccionado = $alumnos[0];
+        }
+
+        $documentoFinal = null;
+        if ($alumno_seleccionado) {
+            $todosDocs = $this->documentoModel->obtenerPorAlumno($alumno_seleccionado['id_alumno']);
+            foreach ($todosDocs as $doc) {
+                if (stripos($doc['tipo_documento'], 'Reporte Final de Servicio Social') !== false) {
+                    $documentoFinal = $doc;
+                    break;
+                }
+            }
+        }
 
         $this->view('dgtyv/liberacion', [
-            'titulo' => 'Módulo de Liberación',
+            'titulo' => 'Módulo de Liberación y Reporte Final',
             'alumnos' => $alumnos,
+            'alumno_seleccionado' => $alumno_seleccionado,
+            'documentoFinal' => $documentoFinal,
             'paginaActiva' => 'liberacion'
         ]);
     }
 
-    /**
-     * POST: Emitir constancia de liberación
-     */
-    public function emitir_liberacion(): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('dgtyv/liberacion');
-            return;
-        }
-        $ids = $_POST['alumnos'] ?? [];
-        $count = 0;
-        foreach ($ids as $idAlumno) {
-            if ($this->alumnoModel->marcarLiberado((int) $idAlumno)) {
-                $count++;
+    public function evaluar_reporte_final(): void {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id_alumno = (int)$_POST['id_alumno'];
+            $accion = $_POST['accion']; // 'Aprobar' o 'Rechazar'
+            
+            require_once APP_PATH . '/core/Database.php';
+            $db = Database::getInstance()->getConnection();
+
+            if ($accion === 'Rechazar') {
+                $motivo = trim($_POST['motivo_rechazo']);
+                $stmt = $db->prepare("UPDATE asignaciones SET estado_reporte_final = 'Rechazado', motivo_rechazo_final = ? WHERE id_alumno = ? AND estado_asignacion IN ('Activo', 'Pendiente')");
+                if ($stmt->execute([$motivo, $id_alumno])) {
+                    $_SESSION['flash_success'] = 'El reporte final ha sido rechazado y el alumno ha sido notificado.';
+                } else {
+                    $_SESSION['flash_error'] = 'Error al rechazar el reporte final.';
+                }
+            } elseif ($accion === 'Aprobar') {
+                if (isset($_FILES['constancia_pdf']) && $_FILES['constancia_pdf']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = APP_PATH . '/public/uploads/documentos/';
+                    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+                    $tmpName = $_FILES['constancia_pdf']['tmp_name'];
+                    $originalName = $_FILES['constancia_pdf']['name'];
+                    $safeName = preg_replace('/[^a-zA-Z0-9.\-_]/', '_', $originalName);
+                    $newName = time() . '_' . $id_alumno . '_' . $safeName;
+                    $destPath = $uploadDir . $newName;
+
+                    if (move_uploaded_file($tmpName, $destPath)) {
+                        $rutaDB = '/public/uploads/documentos/' . $newName;
+                        $tipoDoc = "Constancia de Liberación";
+                        
+                        $this->documentoModel->subirDocumento($id_alumno, $tipoDoc, $originalName, $rutaDB);
+                        
+                        $stmt = $db->prepare("UPDATE asignaciones SET estado_reporte_final = 'Aprobado', motivo_rechazo_final = NULL WHERE id_alumno = ? AND estado_asignacion IN ('Activo', 'Pendiente')");
+                        $stmt->execute([$id_alumno]);
+
+                        // Marcar alumno como liberado globalmente
+                        $this->alumnoModel->marcarLiberado($id_alumno);
+                        
+                        $_SESSION['flash_success'] = 'Reporte Final aprobado y Constancia de Liberación emitida con éxito.';
+                    } else {
+                        $_SESSION['flash_error'] = 'Error al guardar el documento de la constancia.';
+                    }
+                } else {
+                    $_SESSION['flash_error'] = 'Debe subir el documento PDF de la Constancia de Liberación.';
+                }
             }
+            
+            $this->redirect("dgtyv/liberacion?id_alumno=$id_alumno");
         }
-        if ($count > 0) {
-            $_SESSION['flash_success'] = "Se emitieron {$count} constancia(s) de liberación.";
-        } else {
-            $_SESSION['flash_error'] = 'No se seleccionaron alumnos o ocurrió un error.';
-        }
-        $this->redirect('dgtyv/liberacion');
     }
 
     public function catalogo_programas(): void {

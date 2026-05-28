@@ -314,6 +314,9 @@
         <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/alumno/bimestrales') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/alumno/bimestrales">
             <i class="bi bi-journal-text"></i> Reportes Bimestrales
         </a>
+        <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/alumno/reporte_final') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/alumno/reporte_final">
+            <i class="bi bi-file-earmark-check-fill"></i> Reporte Final y Liberación
+        </a>
     </nav>
     <div class="mt-auto p-3 border-top">
         <a href="<?= BASE_URL ?>/auth/logout" class="nav-link text-danger">

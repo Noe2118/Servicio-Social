@@ -68,7 +68,7 @@ class AlumnoModel {
 
     public function obtenerAlumnosParaLiberacion(): array {
         $stmt = $this->db->query(
-            "SELECT a.*, asig.id_programa, p.nombre_programa, d.nombre_organizacion 
+            "SELECT a.*, asig.id_programa, asig.estado_reporte_final, asig.motivo_rechazo_final, p.nombre_programa, d.nombre_organizacion 
              FROM alumnos a 
              LEFT JOIN asignaciones asig ON a.id_alumno = asig.id_alumno AND asig.estado_asignacion IN ('Activo', 'Concluido')
              LEFT JOIN programas p ON asig.id_programa = p.id_programa 
